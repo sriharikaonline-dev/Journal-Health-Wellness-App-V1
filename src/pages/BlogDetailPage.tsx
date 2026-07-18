@@ -153,19 +153,23 @@ export function BlogDetailPage({ slug }: { slug: string }) {
                 className="mb-8 animate-fade-up"
                 style={{ animationDelay: `${i * 80}ms` }}
               >
-                <h2
-                  className={`flex items-center gap-2 text-2xl font-extrabold ${a.text}`}
-                >
-                  <span
-                    className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg ${a.bgSoft}`}
+                {s.heading && (
+                  <h2
+                    className={`flex items-center gap-2 text-2xl font-extrabold ${a.text}`}
                   >
-                    <Sparkles className="h-4 w-4" />
-                  </span>
-                  {s.heading}
-                </h2>
-                <p className="mt-3 text-lg leading-relaxed text-navy-700">
-                  {s.text}
-                </p>
+                    <span
+                      className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg ${a.bgSoft}`}
+                    >
+                      <Sparkles className="h-4 w-4" />
+                    </span>
+                    {s.heading}
+                  </h2>
+                )}
+                {s.text && (
+                  <p className="mt-3 whitespace-pre-line text-lg leading-relaxed text-navy-700">
+                    {s.text}
+                  </p>
+                )}
               </section>
             ))}
 

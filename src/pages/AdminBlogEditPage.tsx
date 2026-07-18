@@ -499,15 +499,19 @@ function BlogPreview({ blog }: { blog: Blog }) {
         ) : (
           sections.map((s, i) => (
             <section key={i} className="mb-8">
-              <h2 className={`flex items-center gap-2 text-2xl font-extrabold ${a.text}`}>
-                <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg ${a.bgSoft}`}>
-                  <Eye className="h-4 w-4" />
-                </span>
-                {s.heading}
-              </h2>
-              <p className="mt-3 whitespace-pre-line text-lg leading-relaxed text-navy-700">
-                {s.text}
-              </p>
+              {s.heading && (
+                <h2 className={`flex items-center gap-2 text-2xl font-extrabold ${a.text}`}>
+                  <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg ${a.bgSoft}`}>
+                    <Eye className="h-4 w-4" />
+                  </span>
+                  {s.heading}
+                </h2>
+              )}
+              {s.text && (
+                <p className="mt-3 whitespace-pre-line text-lg leading-relaxed text-navy-700">
+                  {s.text}
+                </p>
+              )}
             </section>
           ))
         )}

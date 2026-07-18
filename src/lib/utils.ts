@@ -55,15 +55,30 @@ export function accentClasses(a: Accent) {
   };
 }
 
-// Parse the blog body format: "## Heading\n text" segments.
+// Parse the blog body format: "## Heading\n paragraph" segments.
+// "## " only starts a new section at the beginning of a line, so paragraphs
+// that happen to contain "## " inline are not split. Text before the first
+// "## " becomes an untitled intro section.
 export function parseBlogBody(body: string): BlogSection[] {
-  return body
-    .split('## ')
-    .slice(1)
-    .map((chunk) => {
-      const nl = chunk.indexOf('\n');
-      const heading = chunk.slice(0, nl).trim();
-      const text = chunk.slice(nl + 1).trim();
-      return { heading, text };
-    });
+  const sections: BlogSection[] = [];
+  let current: BlogSection | null = null;
+  const flush = () => {
+    if (current) sections.push(current);
+    current = null;
+  };
+  for (const raw of body.split('\n')) {
+    const line = raw.trim();
+    if (line.startsWith('## ')) {
+      flush();
+      current = { heading: line.slice(3).trim(), text: '' };
+    } else if (line) {
+      if (!current) {
+        current = { heading: '', text: line };
+      } else {
+        current.text = current.text ? `${current.text}\n${line}` : line;
+      }
+    }
+  }
+  flush();
+  return sections;
 }
