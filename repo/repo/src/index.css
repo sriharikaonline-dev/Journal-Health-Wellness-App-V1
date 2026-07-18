@@ -1,0 +1,71 @@
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:ital,wght@0,400;0,600;0,700;0,800;1,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-navy-50 text-navy-900 font-body antialiased;
+  }
+  h1, h2, h3, h4, h5 {
+    @apply font-display;
+    letter-spacing: -0.01em;
+  }
+  ::selection {
+    @apply bg-hotpink-300 text-navy-900;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 font-bold transition-all duration-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-offset-2;
+  }
+  .btn-primary {
+    @apply bg-teal-500 text-white hover:bg-teal-600 shadow-soft hover:-translate-y-0.5 focus-visible:ring-teal-300;
+  }
+  .btn-pink {
+    @apply bg-hotpink-500 text-white hover:bg-hotpink-600 shadow-soft hover:-translate-y-0.5 focus-visible:ring-hotpink-300;
+  }
+  .btn-sunny {
+    @apply bg-sunny-400 text-navy-900 hover:bg-sunny-500 shadow-soft hover:-translate-y-0.5 focus-visible:ring-sunny-300;
+  }
+  .btn-navy {
+    @apply bg-navy-800 text-white hover:bg-navy-900 shadow-soft hover:-translate-y-0.5 focus-visible:ring-navy-300;
+  }
+  .btn-ghost {
+    @apply bg-white/70 text-navy-800 hover:bg-white border border-navy-100 hover:-translate-y-0.5;
+  }
+  .card {
+    @apply rounded-3xl bg-white shadow-soft border border-navy-50;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-bold;
+  }
+  .section {
+    @apply mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8;
+  }
+  .gradient-text {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-teal-600 via-hotpink-500 to-sunny-500;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #eef2f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #b6c5e3;
+  border-radius: 9999px;
+  border: 2px solid #eef2f9;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #5c7cba;
+}
