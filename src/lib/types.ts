@@ -119,6 +119,12 @@ export interface Founder {
   created_at: string;
 }
 
+export interface ChatReply {
+  text: string;
+  at: string;
+  by_email: string | null;
+}
+
 export interface ChatMessage {
   id: string;
   user_id: string;
@@ -126,6 +132,7 @@ export interface ChatMessage {
   message: string;
   handled: boolean;
   created_at: string;
+  replies: ChatReply[] | null;
 }
 
 export interface Profile {

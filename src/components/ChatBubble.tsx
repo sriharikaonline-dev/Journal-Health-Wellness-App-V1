@@ -84,7 +84,7 @@ export function ChatBubble() {
                 return (
                   <div
                     key={m.id}
-                    className={`flex ${mine ? 'justify-end' : 'justify-start'}`}
+                    className={`flex flex-col ${mine ? 'items-end' : 'items-start'}`}
                   >
                     <div
                       className={`max-w-[80%] rounded-2xl px-3.5 py-2 text-sm shadow-soft ${
@@ -110,6 +110,29 @@ export function ChatBubble() {
                         )}
                       </p>
                     </div>
+                    {m.replies && m.replies.length > 0 && (
+                      <div className="mt-1 w-full max-w-[80%] space-y-1">
+                        {m.replies.map((r, i) => (
+                          <div
+                            key={i}
+                            className="rounded-2xl bg-white px-3.5 py-2 text-sm shadow-soft"
+                          >
+                            <p className="whitespace-pre-wrap break-words text-navy-800">
+                              {r.text}
+                            </p>
+                            <p className="mt-1 text-[10px] text-teal-600">
+                              {r.by_email ?? 'Team'} ·{' '}
+                              {new Date(r.at).toLocaleString([], {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                month: 'short',
+                                day: 'numeric',
+                              })}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 );
               })

@@ -23,6 +23,7 @@ import {
   markChatHandled,
   markChatRead,
   getUnreadCount,
+  replyToChatMessage,
   type ChatMessage,
   type Profile,
 } from '../lib/data';
@@ -53,6 +54,8 @@ export function AdminDashboardPage() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [unread, setUnread] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [replyDrafts, setReplyDrafts] = useState<Record<string, string>>({});
+  const [replying, setReplying] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -80,6 +83,19 @@ export function AdminDashboardPage() {
   const handle = async (id: string) => {
     await markChatHandled(id);
     setMessages((m) => m.map((x) => (x.id === id ? { ...x, handled: true } : x)));
+  };
+
+  const sendReply = async (id: string) => {
+    const text = (replyDrafts[id] ?? '').trim();
+    if (!text || replying) return;
+    setReplying(id);
+    const updated = await replyToChatMessage(id, text, user?.email ?? null);
+    setReplying(null);
+    if (!updated) return;
+    setMessages((m) =>
+      m.map((x) => (x.id === id ? { ...x, replies: updated, handled: true } : x)),
+    );
+    setReplyDrafts((d) => ({ ...d, [id]: '' }));
   };
 
   const hrefFor = (type: string) => {
@@ -186,19 +202,65 @@ export function AdminDashboardPage() {
                   <p className="mt-1.5 whitespace-pre-wrap break-words text-sm text-navy-800">
                     {m.message}
                   </p>
-                  <div className="mt-2 flex items-center justify-end">
-                    {m.handled ? (
+
+                  {m.replies && m.replies.length > 0 && (
+                    <div className="mt-3 space-y-1.5 border-l-2 border-teal-300 pl-3">
+                      {m.replies.map((r, i) => (
+                        <div key={i}>
+                          <p className="whitespace-pre-wrap break-words text-sm font-semibold text-teal-800">
+                            {r.text}
+                          </p>
+                          <p className="text-[10px] text-navy-400">
+                            {r.by_email ?? 'Team'} ·{' '}
+                            {new Date(r.at).toLocaleString([], {
+                              month: 'short',
+                              day: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="mt-2 flex items-center justify-end gap-2">
+                    {m.handled && (!m.replies || m.replies.length === 0) ? (
                       <span className="inline-flex items-center gap-1 text-xs font-bold text-teal-600">
                         <CheckCircle2 className="h-3.5 w-3.5" /> Handled
                       </span>
                     ) : (
                       <button
                         onClick={() => handle(m.id)}
-                        className="rounded-lg bg-teal-100 px-2.5 py-1 text-xs font-bold text-teal-700 transition-colors hover:bg-teal-200"
+                        className="rounded-lg bg-navy-100 px-2.5 py-1 text-xs font-bold text-navy-600 transition-colors hover:bg-navy-200"
                       >
                         Mark handled
                       </button>
                     )}
+                  </div>
+
+                  <div className="mt-2 flex items-center gap-2">
+                    <input
+                      value={replyDrafts[m.id] ?? ''}
+                      onChange={(e) =>
+                        setReplyDrafts((d) => ({ ...d, [m.id]: e.target.value }))
+                      }
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                          e.preventDefault();
+                          sendReply(m.id);
+                        }
+                      }}
+                      placeholder="Type a reply…"
+                      className="flex-1 rounded-lg border-2 border-navy-100 bg-white px-2.5 py-1.5 text-sm text-navy-800 outline-none focus:border-teal-300"
+                    />
+                    <button
+                      onClick={() => sendReply(m.id)}
+                      disabled={replying === m.id || !(replyDrafts[m.id] ?? '').trim()}
+                      className="rounded-lg bg-teal-500 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-teal-600 disabled:opacity-50"
+                    >
+                      {replying === m.id ? '…' : 'Reply'}
+                    </button>
                   </div>
                 </div>
               ))

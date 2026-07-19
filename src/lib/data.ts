@@ -4,6 +4,7 @@ import type {
   BodySystem,
   Category,
   ChatMessage,
+  ChatReply,
   Founder,
   MedicalProfession,
   Profile,
@@ -520,6 +521,36 @@ export async function markChatHandled(id: string): Promise<void> {
     .update({ handled: true })
     .eq('id', id);
   if (error) console.warn('markChatHandled error', error.message);
+}
+
+export async function replyToChatMessage(
+  id: string,
+  text: string,
+  byEmail: string | null,
+): Promise<ChatReply[] | null> {
+  const { data: existing, error: fetchErr } = await supabase
+    .from('chat_messages')
+    .select('replies')
+    .eq('id', id)
+    .maybeSingle();
+  if (fetchErr) {
+    console.warn('replyToChatMessage fetch error', fetchErr.message);
+    return null;
+  }
+  const replies = Array.isArray(existing?.replies) ? existing.replies : [];
+  const newReply: ChatReply = { text, at: new Date().toISOString(), by_email: byEmail };
+  const updated = [...replies, newReply];
+  const { data, error } = await supabase
+    .from('chat_messages')
+    .update({ replies: updated, handled: true })
+    .eq('id', id)
+    .select('replies')
+    .maybeSingle();
+  if (error) {
+    console.warn('replyToChatMessage update error', error.message);
+    return null;
+  }
+  return (data?.replies as ChatReply[]) ?? updated;
 }
 
 export async function markChatRead(userId: string): Promise<void> {
