@@ -52,14 +52,16 @@ export function AdminSignInPage() {
       e.preventDefault();
       if (codeLoading) return;
       setCodeError(null);
-      if (!isValidPasscodeFormat(code)) {
+      if (!isValidPasscodeFormat(code) && storedHash) {
         setCodeError(`Enter all ${PASSCODE_LENGTH} digits.`);
         triggerShake();
         return;
       }
       if (!storedHash) {
-        setCodeError('No team code is set yet. Ask an admin to set one first.');
-        triggerShake();
+        // No code set yet — this is the first admin. Let them through so they
+        // can reach Settings and set a code. Once a code exists, the gate
+        // enforces it for everyone (including future sign-ins).
+        setStage('auth');
         return;
       }
       const ok = await verifyPasscode(code, storedHash);
@@ -112,7 +114,9 @@ export function AdminSignInPage() {
           </h1>
           <p className="mt-2 text-sm text-navy-600">
             {stage === 'code'
-              ? 'Enter the team code to continue.'
+              ? storedHash === null && !codeLoading
+                ? 'No team code is set yet. Enter anything to continue and set one from Settings.'
+                : 'Enter the team code to continue.'
               : mode === 'signin'
                 ? 'Welcome back. Sign in to manage MY Journal.'
                 : 'Create your team account to start publishing.'}
