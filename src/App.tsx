@@ -10,6 +10,7 @@ import { BlogDetailPage } from './pages/BlogDetailPage';
 import { BodyPage } from './pages/BodyPage';
 import { CareersPage } from './pages/CareersPage';
 import { AboutPage } from './pages/AboutPage';
+import { FoundersPage } from './pages/FoundersPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { AdminSignInPage } from './pages/AdminSignInPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
@@ -18,6 +19,7 @@ import { AdminBlogEditPage } from './pages/AdminBlogEditPage';
 import { AdminContentListPage } from './pages/AdminContentListPage';
 import { AdminContentEditPage } from './pages/AdminContentEditPage';
 import { AdminSettingsPage } from './pages/AdminSettingsPage';
+import { ChatBubble } from './components/ChatBubble';
 
 const ADMIN_ROUTES = new Set([
   'admin',
@@ -91,8 +93,10 @@ function App() {
         {route.name === 'body' && <BodyPage />}
         {route.name === 'careers' && <CareersPage />}
         {route.name === 'about' && <AboutPage />}
+        {route.name === 'founders' && <FoundersPage />}
         {route.name === 'not-found' && <NotFoundPage />}
       </main>
+      <ChatBubble />
       <Footer />
     </div>
   );

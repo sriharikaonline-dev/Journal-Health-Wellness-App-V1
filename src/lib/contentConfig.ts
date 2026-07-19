@@ -117,6 +117,20 @@ export const CONTENT_CONFIGS: Record<ContentType, ContentConfig> = {
       { key: 'sort_order', label: 'Sort order', type: 'number' },
     ],
   },
+  founders: {
+    type: 'founders',
+    singular: 'Founder',
+    plural: 'Founders',
+    titleKey: 'name',
+    subtitleKey: 'role',
+    fields: [
+      { key: 'name', label: 'Name', type: 'text', required: true, placeholder: 'Jane Doe' },
+      { key: 'role', label: 'Role', type: 'text', required: true, placeholder: 'Co-Founder & Editor' },
+      { key: 'description', label: 'Description', type: 'textarea', required: true, placeholder: 'A short bio about this founder.' },
+      { key: 'photo_url', label: 'Photo URL', type: 'text', hint: 'Paste an image URL. Leave blank for a placeholder.', placeholder: 'https://…' },
+      { key: 'sort_order', label: 'Sort order', type: 'number', hint: 'Lower numbers appear first.' },
+    ],
+  },
 };
 
 export const CONTENT_TYPES: {
@@ -129,6 +143,7 @@ export const CONTENT_TYPES: {
   { type: 'categories', label: 'Topics', description: 'Wellness topics that tag blogs and questions.' },
   { type: 'body_systems', label: 'Body Systems', description: 'The "Learn About Your Body" tab entries.' },
   { type: 'medical_professions', label: 'Medical Professions', description: 'The "Find Your Path" tab entries.' },
+  { type: 'founders', label: 'Founders', description: 'The founders shown on the Founders tab.' },
   { type: 'site_settings', label: 'Home & About Pages', description: 'The wording on the home and about pages.' },
 ];
 

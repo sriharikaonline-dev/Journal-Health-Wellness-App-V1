@@ -8,8 +8,8 @@ import {
   ShieldCheck,
   ArrowRight,
 } from 'lucide-react';
-import type { SiteSettings } from '../lib/types';
-import { getSiteSettings } from '../lib/data';
+import type { Founder, SiteSettings } from '../lib/types';
+import { getSiteSettings, getFounders } from '../lib/data';
 import { routeToHash } from '../lib/router';
 import { SectionHeader } from '../components/ui';
 import { Blobs } from '../components/Blobs';
@@ -18,11 +18,14 @@ const valueIcons = [Heart, ShieldCheck, Users, Sparkles];
 
 export function AboutPage() {
   const [settings, setSettings] = useState<SiteSettings | null>(null);
+  const [founders, setFounders] = useState<Founder[]>([]);
 
   useEffect(() => {
     let active = true;
-    getSiteSettings().then((s) => {
-      if (active) setSettings(s);
+    Promise.all([getSiteSettings(), getFounders()]).then(([s, f]) => {
+      if (!active) return;
+      setSettings(s);
+      setFounders(f);
     });
     return () => {
       active = false;
@@ -162,6 +165,51 @@ export function AboutPage() {
           </div>
         </div>
       </section>
+
+      {/* Founders */}
+      {founders.length > 0 && (
+        <section className="section pb-20">
+          <SectionHeader
+            eyebrow="The team"
+            title="Meet the founders"
+            subtitle="The young people who built MY Journal — and keep it kind, honest, and real."
+          />
+          <div className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+            {founders.map((f, i) => (
+              <div
+                key={f.id}
+                className="card group flex flex-col items-center p-6 text-center transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_20px_40px_-15px_rgba(16,23,70,0.25)]"
+              >
+                <div className="relative h-24 w-24 overflow-hidden rounded-full bg-gradient-to-br from-teal-100 via-hotpink-100 to-sunny-100 ring-4 ring-white shadow-soft">
+                  {f.photo_url ? (
+                    <img
+                      src={f.photo_url}
+                      alt={f.name}
+                      className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    />
+                  ) : (
+                    <span className="grid h-full w-full place-items-center bg-gradient-to-br from-teal-400 via-hotpink-400 to-sunny-300 text-2xl font-extrabold text-white">
+                      {f.name.charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                </div>
+                <h3 className="mt-4 text-base font-extrabold text-navy-900">{f.name}</h3>
+                <p className="mt-0.5 text-xs font-bold text-teal-600">{f.role}</p>
+                <p className="mt-2 text-sm text-navy-600">{f.description}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-8 text-center">
+            <a
+              href={routeToHash({ name: 'founders' })}
+              className="btn btn-ghost"
+            >
+              See the founders page
+              <ArrowRight className="h-4 w-4" />
+            </a>
+          </p>
+        </section>
+      )}
     </div>
   );
 }

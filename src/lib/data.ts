@@ -3,7 +3,10 @@ import type {
   Blog,
   BodySystem,
   Category,
+  ChatMessage,
+  Founder,
   MedicalProfession,
+  Profile,
   SiteSettings,
   SurveyQuestion,
 } from './types';
@@ -309,7 +312,8 @@ export type ContentType =
   | 'categories'
   | 'survey_questions'
   | 'body_systems'
-  | 'medical_professions';
+  | 'medical_professions'
+  | 'founders';
 
 type ContentRow = Partial<Category> & Partial<SurveyQuestion> & Partial<BodySystem> & Partial<MedicalProfession> & { id?: string };
 
@@ -318,6 +322,7 @@ const ORDER_COL: Record<ContentType, string> = {
   survey_questions: 'sort_order',
   body_systems: 'sort_order',
   medical_professions: 'sort_order',
+  founders: 'sort_order',
 };
 
 export async function adminListContent<T extends ContentRow>(
@@ -416,6 +421,14 @@ function newContent(type: ContentType): Record<string, unknown> {
         accent: 'teal',
         sort_order: 99,
       };
+    case 'founders':
+      return {
+        name: '',
+        role: '',
+        description: '',
+        photo_url: null,
+        sort_order: 99,
+      };
   }
 }
 
@@ -440,5 +453,101 @@ function sanitizeInput(
   }
   // null out empty category_id so FK is happy
   if ('category_id' in out && out.category_id === '') out.category_id = null;
+  // founders: null out empty photo_url
+  if ('photo_url' in out && (out.photo_url === '' || out.photo_url === undefined)) {
+    out.photo_url = null;
+  }
   return out;
+}
+
+// ===== Founders (public read, owner write) =====
+
+export async function getFounders(): Promise<Founder[]> {
+  if (!supabaseAvailable) return [];
+  const { data, error } = await supabase
+    .from('founders')
+    .select('*')
+    .order('sort_order', { ascending: true });
+  if (error) {
+    console.warn('getFounders error', error.message);
+    return [];
+  }
+  return (data ?? []) as Founder[];
+}
+
+// ===== Chat inbox (signed-in members ask, owner reads) =====
+
+export async function fetchMyChatMessages(): Promise<ChatMessage[]> {
+  const { data, error } = await supabase
+    .from('chat_messages')
+    .select('*')
+    .order('created_at', { ascending: true });
+  if (error) {
+    console.warn('fetchMyChatMessages error', error.message);
+    return [];
+  }
+  return (data ?? []) as ChatMessage[];
+}
+
+export async function fetchAllChatMessages(): Promise<ChatMessage[]> {
+  const { data, error } = await supabase
+    .from('chat_messages')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) {
+    console.warn('fetchAllChatMessages error', error.message);
+    return [];
+  }
+  return (data ?? []) as ChatMessage[];
+}
+
+export async function sendChatMessage(message: string): Promise<ChatMessage | null> {
+  const { data, error } = await supabase
+    .from('chat_messages')
+    .insert({ message })
+    .select()
+    .single();
+  if (error) {
+    console.warn('sendChatMessage error', error.message);
+    return null;
+  }
+  return data as ChatMessage;
+}
+
+export async function markChatHandled(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('chat_messages')
+    .update({ handled: true })
+    .eq('id', id);
+  if (error) console.warn('markChatHandled error', error.message);
+}
+
+export async function markChatRead(userId: string): Promise<void> {
+  const { error } = await supabase
+    .from('chat_reads')
+    .upsert({ user_id: userId, last_read_at: new Date().toISOString() });
+  if (error) console.warn('markChatRead error', error.message);
+}
+
+export async function getUnreadCount(): Promise<number> {
+  const { data, error } = await supabase.rpc('chat_unread_count');
+  if (error) {
+    console.warn('getUnreadCount error', error.message);
+    return 0;
+  }
+  return Number(data ?? 0);
+}
+
+// ===== Profiles (members list, owner-only) =====
+
+export async function fetchProfiles(): Promise<Profile[]> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .order('created_at', { ascending: true });
+  if (error) {
+    console.warn('fetchProfiles error', error.message);
+    return [];
+  }
+  return (data ?? []) as Profile[];
 }

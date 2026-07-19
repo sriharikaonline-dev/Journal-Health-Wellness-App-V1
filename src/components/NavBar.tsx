@@ -10,6 +10,7 @@ const links: { label: string; route: Route }[] = [
   { label: 'Your Body', route: { name: 'body' } },
   { label: 'Find Your Path', route: { name: 'careers' } },
   { label: 'About', route: { name: 'about' } },
+  { label: 'Founders', route: { name: 'founders' } },
 ];
 
 export function NavBar({ route }: { route: Route }) {
