@@ -174,31 +174,6 @@ function mergeSettings(base: SiteSettings, patch: Partial<SiteSettings>): SiteSe
   };
 }
 
-// --- Team passcode gate -----------------------------------------------------
-
-export async function getTeamPasscodeHash(): Promise<string | null> {
-  if (!supabaseAvailable) return fallback.teamPasscodeHash;
-  try {
-    const { data, error } = await supabase
-      .from('site_settings')
-      .select('team_passcode_hash')
-      .eq('id', 1)
-      .maybeSingle();
-    if (error || !data) return null;
-    return (data.team_passcode_hash as string | null) ?? null;
-  } catch {
-    return null;
-  }
-}
-
-export async function adminSetTeamPasscodeHash(hash: string | null): Promise<void> {
-  const { error } = await supabase
-    .from('site_settings')
-    .update({ team_passcode_hash: hash })
-    .eq('id', 1);
-  if (error) throw new Error(error.message);
-}
-
 // --- Admin: blog CRUD (authenticated only) ---------------------------------
 
 export type BlogInput = {

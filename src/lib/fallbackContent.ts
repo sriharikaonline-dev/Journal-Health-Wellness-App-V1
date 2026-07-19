@@ -160,5 +160,4 @@ export const fallback = {
   bodySystems: fallbackBodySystems,
   professions: fallbackProfessions,
   siteSettings: fallbackSiteSettings,
-  teamPasscodeHash: null as string | null,
 };
