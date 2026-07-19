@@ -1,167 +1,216 @@
-import { useEffect, useState } from 'react';
-import {
-  Heart,
-  Sparkles,
-  Users,
-  BookOpen,
-  Compass,
-  ShieldCheck,
-  ArrowRight,
-} from 'lucide-react';
-import type { SiteSettings } from '../lib/types';
-import { getSiteSettings } from '../lib/data';
-import { routeToHash } from '../lib/router';
-import { SectionHeader } from '../components/ui';
-import { Blobs } from '../components/Blobs';
+import { Link } from "react-router-dom";
+import { useMemberCount, useProfiles } from "../lib/useMembers.ts";
+import { useAuth } from "../lib/auth.tsx";
+import { Avatar, Card, EmptyState, Pill } from "../components/ui.tsx";
+import { Icon } from "../components/Icon.tsx";
+import { styled } from "../lib/styled.tsx";
 
-const valueIcons = [Heart, ShieldCheck, Users, Sparkles];
+const hero = styled("section")`
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 64px 24px 24px;
+  text-align: center;
+`;
+const lead = styled("p")`
+  font-size: 1.18rem;
+  color: #475569;
+  line-height: 1.65;
+  margin-top: 20px;
+`;
+const section = styled("section")`
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 48px 24px;
+`;
+const values = styled("div")`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+  @media (max-width: 800px) {
+    grid-template-columns: 1fr;
+  }
+`;
+const valCard = styled("div")`
+  padding: 26px;
+  border-radius: 20px;
+  background: #fff;
+  border: 1px solid #f1f5f9;
+  .ic {
+    width: 46px;
+    height: 46px;
+    border-radius: 13px;
+    background: #f0fdfa;
+    color: #0d9488;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 14px;
+  }
+  h3 {
+    font-size: 1.15rem;
+  }
+  p {
+    color: #64748b;
+    margin-top: 8px;
+    font-size: 0.94rem;
+    line-height: 1.55;
+  }
+`;
+const membersGrid = styled("div")`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+  margin-top: 24px;
+`;
+const memberCard = styled("div")`
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid #f1f5f9;
+  transition: border-color 0.18s ease;
+  &:hover {
+    border-color: #ccfbf1;
+  }
+  .info {
+    min-width: 0;
+  }
+  .name {
+    font-weight: 600;
+    color: #0f172a;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .when {
+    font-size: 0.8rem;
+    color: #94a3b8;
+  }
+`;
+const joinCta = styled("div")`
+  margin-top: 28px;
+  padding: 26px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #f0fdfa, #fdf2f8);
+  border: 1px solid #ccfbf1;
+  text-align: center;
+`;
 
 export function AboutPage() {
-  const [settings, setSettings] = useState<SiteSettings | null>(null);
+  const memberCount = useMemberCount();
+  const { user } = useAuth();
+  const { profiles, loading } = useProfiles(true);
 
-  useEffect(() => {
-    let active = true;
-    getSiteSettings().then((s) => {
-      if (active) setSettings(s);
-    });
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  const a = settings?.about;
   return (
-    <div>
-      <section className="relative overflow-hidden bg-hero-grid">
-        <Blobs />
-        <div className="section relative py-16 sm:py-20">
-          <div className="mx-auto max-w-3xl text-center">
-            <span className="chip bg-hotpink-100 text-hotpink-700 mx-auto">
-              <Heart className="h-4 w-4" fill="currentColor" />
-              {a?.eyebrow ?? 'About MY Journal'}
-            </span>
-            <h1 className="mt-4 text-4xl font-extrabold leading-tight text-navy-900 sm:text-5xl">
-              {a?.title ?? "We're here to remind you"}{' '}
-              <span className="gradient-text">
-                {a?.highlight ?? 'You Got This.'}
-              </span>
-            </h1>
-            <p className="mt-5 text-lg text-navy-700">
-              {a?.paragraph ??
-                "Medical Youth Journal (MY Journal, for short) is a nonprofit built by young people who believe wellness should feel welcoming — not intimidating. We write about the stuff that actually matters at your age: mood, sleep, food, focus, friendships, and the big question of what to do with your life."}
+    <>
+      <section className={hero()}>
+        <Pill soft="#f0fdfa" text="#0f766e">
+          <Icon name="HeartHand" size={14} /> Our mission
+        </Pill>
+        <h1 style={{ marginTop: 18 }}>Wellness, without the noise.</h1>
+        <p className={lead()}>
+          MY Journal was started by students who kept asking the same question: "why does no one teach us this?" We believe
+          everyone deserves clear, kind, judgment-free information about their body and mind — written like a friend would
+          explain it, not a textbook.
+        </p>
+      </section>
+
+      <section className={section()}>
+        <div className={values()}>
+          <div className={valCard()}>
+            <div className="ic">
+              <Icon name="Heart" size={22} />
+            </div>
+            <h3>Kindness first</h3>
+            <p>No shame, no fear-mongering. Every article assumes you're doing your best — because you are.</p>
+          </div>
+          <div className={valCard()}>
+            <div className="ic" style={{ background: "#fdf2f8", color: "#be185d" }}>
+              <Icon name="Sparkles" size={22} />
+            </div>
+            <h3>Plain language</h3>
+            <p>We turn science into sentences a real person would say. If a word feels confusing, we explain it.</p>
+          </div>
+          <div className={valCard()}>
+            <div className="ic" style={{ background: "#eef2ff", color: "#3730a3" }}>
+              <Icon name="Shield" size={22} />
+            </div>
+            <h3>Honesty always</h3>
+            <p>Wellness info, not medical advice. We point you to real professionals when something needs more care.</p>
+          </div>
+        </div>
+      </section>
+
+      <section className={section()}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 12 }}>
+          <div>
+            <Pill soft="#e0f2fe" text="#0369a1">
+              <Icon name="Users" size={14} /> Our community
+            </Pill>
+            <h2 style={{ marginTop: 12 }}>
+              {memberCount !== null ? `${memberCount} ${memberCount === 1 ? "member" : "members"}` : "Members"} of MY Journal
+            </h2>
+            <p style={{ color: "#64748b", marginTop: 8, maxWidth: 560 }}>
+              Everyone with an account is part of the team. Here's who's here so far.
             </p>
           </div>
         </div>
-      </section>
-
-      {/* What we do */}
-      <section className="section py-16 sm:py-20">
-        <SectionHeader
-          eyebrow={a?.whatWeDoEyebrow ?? 'What we do'}
-          title={
-            a?.whatWeDoTitle ??
-            'A wellness companion, not another thing to stress about'
-          }
-          subtitle={
-            a?.whatWeDoSubtitle ??
-            'Four ways we show up for you — all free, all friendly.'
-          }
-        />
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {(a?.whatWeDo ?? []).map((f, i) => {
-            const Icon = [Sparkles, BookOpen, Heart, Compass][i] ?? Sparkles;
-            return (
-              <div key={i} className="card p-6">
-                <span className="grid h-12 w-12 place-items-center rounded-2xl bg-navy-100 text-navy-700">
-                  <Icon className="h-6 w-6" />
-                </span>
-                <h3 className="mt-4 text-lg font-extrabold text-navy-900">
-                  {f.title}
-                </h3>
-                <p className="mt-2 text-sm text-navy-600">{f.desc}</p>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Values */}
-      <section className="bg-navy-900 py-16 text-navy-100 sm:py-20">
-        <div className="section">
-          <div className="mx-auto max-w-2xl text-center">
-            <span className="chip bg-sunny-400 text-navy-900 mx-auto">
-              {a?.valuesEyebrow ?? 'What we believe'}
-            </span>
-            <h2 className="mt-4 text-3xl font-extrabold text-white sm:text-4xl">
-              {a?.valuesTitle ?? 'The values behind every page'}
-            </h2>
-          </div>
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {(a?.values ?? []).map((v, i) => {
-              const Icon = valueIcons[i] ?? Heart;
+        {loading ? (
+          <Card style={{ marginTop: 24 }}>
+            <p style={{ color: "#64748b" }}>Loading members…</p>
+          </Card>
+        ) : profiles.length === 0 ? (
+          <EmptyState>No members yet — be the first!</EmptyState>
+        ) : (
+          <div className={membersGrid()}>
+            {profiles.map((p) => {
+              const name = p.display_name || p.email?.split("@")[0] || "Member";
+              const hash = Array.from(name).reduce((h, c) => (h + c.charCodeAt(0)) % 4, 0);
+              const bgs = [
+                "linear-gradient(135deg,#14b8a6,#0d9488)",
+                "linear-gradient(135deg,#ec4899,#db2777)",
+                "linear-gradient(135deg,#6366f1,#4338ca)",
+                "linear-gradient(135deg,#f59e0b,#d97706)",
+              ];
               return (
-                <div
-                  key={i}
-                  className="rounded-3xl bg-navy-800 p-6 transition-transform hover:-translate-y-1"
-                >
-                  <span className="grid h-12 w-12 place-items-center rounded-2xl bg-white/10 text-white">
-                    <Icon className="h-6 w-6" />
-                  </span>
-                  <h3 className="mt-4 text-lg font-extrabold text-white">
-                    {v.title}
-                  </h3>
-                  <p className="mt-2 text-sm text-navy-200">{v.desc}</p>
+                <div key={p.id} className={memberCard()}>
+                  <Avatar name={name} size="44px" bg={bgs[hash]} />
+                  <div className="info">
+                    <div className="name">{name}</div>
+                    <div className="when">Joined {new Date(p.created_at).toLocaleDateString(undefined, { month: "short", year: "numeric" })}</div>
+                  </div>
                 </div>
               );
             })}
           </div>
-        </div>
-      </section>
-
-      {/* Important note */}
-      <section className="section py-16 sm:py-20">
-        <div className="card mx-auto max-w-2xl border-teal-200 bg-teal-50 p-8 text-center">
-          <ShieldCheck className="mx-auto h-10 w-10 text-teal-600" />
-          <h2 className="mt-4 text-xl font-extrabold text-navy-900">
-            A kind heads-up
-          </h2>
-          <p className="mt-2 text-navy-700">
-            {a?.noteText ??
-              "MY Journal shares supportive information and stories — it's not a replacement for professional medical advice, diagnosis, or treatment. If you're struggling, please reach out to a trusted adult, a doctor, or a local support line. Asking for help is one of the bravest things you can do."}
-          </p>
-        </div>
-      </section>
-
-      {/* CTA */}
-      <section className="section pb-20">
-        <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-hotpink-500 via-teal-500 to-sunny-400 p-8 text-center shadow-soft sm:p-14">
-          <div className="absolute inset-0 bg-bubble-fade opacity-30" />
-          <div className="relative">
-            <h2 className="font-display text-3xl font-extrabold text-white sm:text-4xl">
-              {a?.ctaTitle ?? 'Come as you are.'}
-            </h2>
-            <p className="mx-auto mt-3 max-w-xl text-white/90">
-              {a?.ctaSubtitle ??
-                "Start with a check-in, browse a blog, or just look around. There's no wrong first step."}
+        )}
+        {!user && (
+          <div className={joinCta()}>
+            <h3 style={{ fontSize: "1.3rem" }}>Want to join the team?</h3>
+            <p style={{ color: "#475569", marginTop: 8, maxWidth: 480, marginInline: "auto" }}>
+              Create a free account to save your weekly check-ins and message the team with any questions.
             </p>
-            <div className="mt-7 flex flex-wrap justify-center gap-3">
-              <a
-                href={routeToHash({ name: 'survey' })}
-                className="btn !bg-white !text-navy-900 hover:!bg-navy-50"
-              >
-                Take the check-in
-                <ArrowRight className="h-4 w-4" />
-              </a>
-              <a
-                href={routeToHash({ name: 'blogs' })}
-                className="btn !bg-navy-900 !text-white hover:!bg-navy-800"
-              >
-                Read a blog
-              </a>
-            </div>
+            <Link
+              to="/"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                marginTop: 16,
+                padding: "12px 22px",
+                borderRadius: 999,
+                background: "#0f172a",
+                color: "#fff",
+                fontWeight: 600,
+              }}
+            >
+              Create an account <Icon name="ArrowRight" size={18} />
+            </Link>
           </div>
-        </div>
+        )}
       </section>
-    </div>
+    </>
   );
 }

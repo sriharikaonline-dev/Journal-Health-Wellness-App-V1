@@ -1,101 +1,70 @@
-import { useEffect } from 'react';
-import { useRouter } from './lib/router';
-import { useAuth } from './lib/auth';
-import { NavBar } from './components/NavBar';
-import { Footer } from './components/Footer';
-import { HomePage } from './pages/HomePage';
-import { SurveyPage } from './pages/SurveyPage';
-import { BlogsPage } from './pages/BlogsPage';
-import { BlogDetailPage } from './pages/BlogDetailPage';
-import { BodyPage } from './pages/BodyPage';
-import { CareersPage } from './pages/CareersPage';
-import { AboutPage } from './pages/AboutPage';
-import { NotFoundPage } from './pages/NotFoundPage';
-import { AdminSignInPage } from './pages/AdminSignInPage';
-import { AdminDashboardPage } from './pages/AdminDashboardPage';
-import { AdminBlogsPage } from './pages/AdminBlogsPage';
-import { AdminBlogEditPage } from './pages/AdminBlogEditPage';
-import { AdminContentListPage } from './pages/AdminContentListPage';
-import { AdminContentEditPage } from './pages/AdminContentEditPage';
-import { AdminSettingsPage } from './pages/AdminSettingsPage';
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { useEffect } from "react";
+import { AuthProvider } from "./lib/auth.tsx";
+import { StyleSheetProvider, injectGlobal } from "./lib/styled.tsx";
+import { base } from "./lib/base-styles.ts";
+import { Navbar } from "./components/Navbar.tsx";
+import { Footer } from "./components/Footer.tsx";
+import { ChatBubble } from "./components/ChatBubble.tsx";
+import { HomePage } from "./pages/HomePage.tsx";
+import { AboutPage } from "./pages/AboutPage.tsx";
+import { FoundersPage } from "./pages/FoundersPage.tsx";
+import { ExplorePage, CategoryDetailPage, BodySystemDetailPage, ProfessionDetailPage } from "./pages/ExplorePage.tsx";
+import { BlogIndexPage, BlogPostPage } from "./pages/BlogPages.tsx";
+import { CheckInPage } from "./pages/CheckInPage.tsx";
+import { WorkspacePage } from "./pages/WorkspacePage.tsx";
+import { AccountPage } from "./pages/AccountPage.tsx";
 
-const ADMIN_ROUTES = new Set([
-  'admin',
-  'admin-blogs',
-  'admin-blog-edit',
-  'admin-content',
-  'admin-content-edit',
-  'admin-settings',
-]);
+injectGlobal(base);
 
-function App() {
-  const { route, navigate } = useRouter();
-  const { user, loading } = useAuth();
-
-  const isAdminRoute = ADMIN_ROUTES.has(route.name);
-  const isSignInRoute = route.name === 'admin-signin';
-
+function ScrollToTop() {
+  const { pathname } = useLocation();
   useEffect(() => {
-    if (!loading && isAdminRoute && !isSignInRoute && !user) {
-      navigate({ name: 'admin-signin' });
-    }
-    if (!loading && isSignInRoute && user) {
-      navigate({ name: 'admin' });
-    }
-  }, [loading, isAdminRoute, isSignInRoute, user, navigate]);
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  return null;
+}
 
-  if (isAdminRoute || isSignInRoute) {
-    if (loading) {
-      return (
-        <div className="grid min-h-dvh place-items-center bg-navy-50">
-          <div className="relative h-14 w-14">
-            <span className="absolute inset-0 animate-ping rounded-full bg-teal-300 opacity-60" />
-            <span className="absolute inset-2 rounded-full bg-gradient-to-br from-teal-500 via-hotpink-500 to-sunny-400" />
-          </div>
-        </div>
-      );
-    }
-    if (isSignInRoute) {
-      return <AdminSignInPage />;
-    }
-    if (!user) {
-      return null;
-    }
-    return (
-      <div className="min-h-dvh bg-navy-50">
-        {route.name === 'admin' && <AdminDashboardPage />}
-        {route.name === 'admin-blogs' && <AdminBlogsPage />}
-        {route.name === 'admin-blog-edit' && (
-          <AdminBlogEditPage id={route.id} />
-        )}
-        {route.name === 'admin-content' && (
-          <AdminContentListPage type={route.type} />
-        )}
-        {route.name === 'admin-content-edit' && (
-          <AdminContentEditPage type={route.type} id={route.id} />
-        )}
-        {route.name === 'admin-settings' && <AdminSettingsPage />}
-      </div>
-    );
-  }
-
+function NotFound() {
   return (
-    <div className="flex min-h-dvh flex-col bg-navy-50">
-      <NavBar route={route} />
-      <main className="flex-1">
-        {route.name === 'home' && <HomePage />}
-        {route.name === 'survey' && <SurveyPage />}
-        {route.name === 'survey-results' && <SurveyPage />}
-        {route.name === 'blogs' && <BlogsPage />}
-        {route.name === 'blog' && <BlogDetailPage slug={route.slug} />}
-        {route.name === 'body' && <BodyPage />}
-        {route.name === 'careers' && <CareersPage />}
-        {route.name === 'about' && <AboutPage />}
-        {route.name === 'not-found' && <NotFoundPage />}
-      </main>
-      <Footer />
+    <div style={{ maxWidth: 560, margin: "100px auto", textAlign: "center", padding: 24 }}>
+      <h1 style={{ fontSize: "2.4rem" }}>404</h1>
+      <p style={{ color: "#64748b", marginTop: 10 }}>That page wandered off. Let's get you back.</p>
+      <a href="/" style={{ color: "#0d9488", fontWeight: 600, marginTop: 18, display: "inline-block" }}>
+        Back home
+      </a>
     </div>
   );
 }
 
-export default App;
+export default function App() {
+  return (
+    <StyleSheetProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <ScrollToTop />
+          <Navbar />
+          <main>
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/about" element={<AboutPage />} />
+              <Route path="/founders" element={<FoundersPage />} />
+              <Route path="/explore" element={<ExplorePage />} />
+              <Route path="/explore/body/:slug" element={<BodySystemDetailPage />} />
+              <Route path="/explore/careers/:slug" element={<ProfessionDetailPage />} />
+              <Route path="/explore/:slug" element={<CategoryDetailPage />} />
+              <Route path="/blog" element={<BlogIndexPage />} />
+              <Route path="/blog/:slug" element={<BlogPostPage />} />
+              <Route path="/check-in" element={<CheckInPage />} />
+              <Route path="/workspace" element={<WorkspacePage />} />
+              <Route path="/account" element={<AccountPage />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </main>
+          <Footer />
+          <ChatBubble />
+        </BrowserRouter>
+      </AuthProvider>
+    </StyleSheetProvider>
+  );
+}

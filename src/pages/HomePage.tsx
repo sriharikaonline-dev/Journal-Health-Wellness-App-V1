@@ -1,300 +1,406 @@
-import { useEffect, useState } from 'react';
-import {
-  Heart,
-  Sparkles,
-  ClipboardList,
-  BookOpen,
-  PersonStanding,
-  Compass,
-  ArrowRight,
-  Star,
-  Smile,
-  Quote,
-} from 'lucide-react';
-import type { Blog, Category, SiteSettings } from '../lib/types';
-import { getBlogs, getCategories, getSiteSettings } from '../lib/data';
-import { accentClasses } from '../lib/utils';
-import { categoryIcon } from '../lib/icons';
-import { routeToHash } from '../lib/router';
-import { BlogCard } from '../components/BlogCard';
-import { SectionHeader } from '../components/ui';
-import { Blobs } from '../components/Blobs';
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+import { supabase } from "../lib/supabase.ts";
+import type { Blog, Category } from "../lib/types.ts";
+import { accent } from "../lib/theme.ts";
+import { useMemberCount } from "../lib/useMembers.ts";
+import { useAuth } from "../lib/auth.tsx";
+import { Card, Pill } from "../components/ui.tsx";
+import { Icon, iconForCategory } from "../components/Icon.tsx";
+import { styled, injectGlobal } from "../lib/styled.tsx";
 
-const features = [
-  {
-    icon: ClipboardList,
-    accent: 'hotpink' as const,
-    route: { name: 'survey' as const },
-    cta: 'Take the check-in',
-  },
-  {
-    icon: BookOpen,
-    accent: 'teal' as const,
-    route: { name: 'blogs' as const },
-    cta: 'Read the blog',
-  },
-  {
-    icon: PersonStanding,
-    accent: 'sunny' as const,
-    route: { name: 'body' as const },
-    cta: 'Explore your body',
-  },
-  {
-    icon: Compass,
-    accent: 'navy' as const,
-    route: { name: 'careers' as const },
-    cta: 'Find your path',
-  },
-];
+const hero = styled("section")`
+  position: relative;
+  padding: 72px 24px 40px;
+  max-width: 1180px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 48px;
+  align-items: center;
+  @media (max-width: 900px) {
+    grid-template-columns: 1fr;
+    padding-top: 48px;
+    gap: 32px;
+  }
+`;
+const h1 = styled("h1")`
+  font-size: clamp(2.4rem, 5.5vw, 3.8rem);
+  line-height: 1.05;
+  .accent {
+    background: linear-gradient(120deg, #14b8a6, #0d9488 60%, #0f766e);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+`;
+const lead = styled("p")`
+  font-size: 1.12rem;
+  color: #475569;
+  line-height: 1.65;
+  margin-top: 22px;
+  max-width: 560px;
+`;
+const ctaRow = styled("div")`
+  display: flex;
+  gap: 14px;
+  margin-top: 30px;
+  flex-wrap: wrap;
+`;
+const statRow = styled("div")`
+  display: flex;
+  gap: 28px;
+  margin-top: 36px;
+  flex-wrap: wrap;
+`;
+const section = styled("section")`
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 56px 24px;
+`;
+const sectionHead = styled("div")`
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 28px;
+  flex-wrap: wrap;
+  h2 {
+    margin: 0;
+  }
+  a {
+    color: #0d9488;
+    font-weight: 600;
+    font-size: 0.95rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    &:hover {
+      gap: 10px;
+    }
+    transition: gap 0.18s ease;
+  }
+`;
+const grid = styled("div")`
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 20px;
+`;
+const catCard = styled("a")`
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 24px;
+  border-radius: 20px;
+  background: #fff;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.25s ease, border-color 0.2s ease;
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+    border-color: ${(p) => p.$soft};
+  }
+`;
+const catIcon = styled("div")`
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: ${(p) => p.$soft};
+  color: ${(p) => p.$text};
+`;
+const blogCard = styled("a")`
+  display: block;
+  padding: 26px;
+  border-radius: 20px;
+  background: #fff;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  transition: transform 0.2s ease, box-shadow 0.25s ease;
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
+  }
+  h3 {
+    margin-top: 14px;
+    font-size: 1.25rem;
+  }
+  p {
+    color: #64748b;
+    margin-top: 8px;
+    font-size: 0.95rem;
+    line-height: 1.55;
+  }
+`;
+const meta = styled("div")`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.82rem;
+  color: #94a3b8;
+  margin-top: 16px;
+`;
+const membersStrip = styled("div")`
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #f0fdfa, #e0f2fe);
+  border: 1px solid #ccfbf1;
+  border-radius: 20px;
+  flex-wrap: wrap;
+`;
+const avatarsWrap = styled("div")`
+  display: flex;
+  & > * {
+    margin-left: -10px;
+    border: 2px solid #f0fdfa;
+  }
+  & > *:first-child {
+    margin-left: 0;
+  }
+`;
+const stat = styled("div")`
+  .num {
+    font-family: "Fraunces", serif;
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: #0f172a;
+  }
+  .lbl {
+    font-size: 0.82rem;
+    color: #64748b;
+    font-weight: 500;
+    margin-top: 2px;
+  }
+`;
+const heroArt = styled("div")`
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 32px;
+  background: linear-gradient(135deg, #f0fdfa 0%, #fdf2f8 100%);
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(13, 148, 136, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  @media (max-width: 900px) {
+    max-width: 420px;
+    margin: 0 auto;
+  }
+`;
+const blob = styled("div")`
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(2px);
+  animation: floatY 7s ease-in-out infinite;
+`;
+void avatarsWrap;
+
+injectGlobal(`
+@keyframes floatY { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-14px); } }
+`);
 
 export function HomePage() {
-  const [blogs, setBlogs] = useState<Blog[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [settings, setSettings] = useState<SiteSettings | null>(null);
-  const [affirmation, setAffirmation] = useState('');
+  const { user } = useAuth();
+  const memberCount = useMemberCount();
+  const [featured, setFeatured] = useState<Blog[]>([]);
+  const [cats, setCats] = useState<Category[]>([]);
 
   useEffect(() => {
-    let active = true;
-    Promise.all([getBlogs(), getCategories(), getSiteSettings()]).then(
-      ([b, c, s]) => {
-        if (!active) return;
-        setBlogs(b.filter((x) => x.featured).slice(0, 3));
-        setCategories(c);
-        setSettings(s);
-        const list = s.home.affirmations;
-        setAffirmation(list[Math.floor(Math.random() * list.length)] ?? '');
-      },
-    );
-    return () => {
-      active = false;
-    };
+    supabase
+      .from("blogs")
+      .select("id, slug, title, summary, author, read_minutes, accent, featured, published, category_id, cover_url, created_at, body")
+      .eq("published", true)
+      .eq("featured", true)
+      .order("created_at", { ascending: false })
+      .limit(3)
+      .then(({ data }) => data && setFeatured(data as Blog[]));
+    supabase
+      .from("categories")
+      .select("id, slug, name, icon, accent, tagline, sort_order")
+      .order("sort_order", { ascending: true })
+      .limit(4)
+      .then(({ data }) => data && setCats(data as Category[]));
   }, []);
 
-  const h = settings?.home;
-
   return (
-    <div>
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-hero-grid">
-        <Blobs />
-        <div className="section relative grid gap-10 py-16 sm:py-20 lg:grid-cols-[1.1fr_0.9fr] lg:items-center lg:py-28">
-          <div className="animate-fade-up">
-            <span className="chip bg-white/80 text-navy-800 shadow-soft backdrop-blur">
-              <Sparkles className="h-4 w-4 text-sunny-500" />
-              {h?.heroEyebrow ?? 'Welcome to MY Journal'}
-            </span>
-            <h1 className="mt-5 text-4xl font-extrabold leading-[1.05] text-navy-900 sm:text-5xl lg:text-6xl">
-              {h?.heroTitle ?? 'Your wellness'}
-              <br />
-              <span className="gradient-text">{h?.heroHighlight ?? 'cheerleader'}</span>
-              <span className="text-navy-900"> {h?.heroTail ?? 'in your pocket.'}</span>
-            </h1>
-            <p className="mt-5 max-w-xl text-lg text-navy-700">
-              {h?.heroSubtitle ??
-                "Check in with how you're feeling, get blogs that actually help, learn how your body works, and explore a future in medicine. Built by young people, for young people."}
-            </p>
-            <div className="mt-7 flex flex-wrap gap-3">
-              <a href={routeToHash({ name: 'survey' })} className="btn btn-pink">
-                <ClipboardList className="h-5 w-5" />
-                Start Your Check-In
-              </a>
-              <a href={routeToHash({ name: 'blogs' })} className="btn btn-ghost">
-                <BookOpen className="h-5 w-5 text-teal-600" />
-                Browse Blogs
-              </a>
-            </div>
-
-            <div className="mt-8 flex items-center gap-3 rounded-2xl bg-white/70 px-4 py-3 shadow-soft backdrop-blur sm:max-w-md">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-hotpink-100 text-hotpink-600">
-                <Quote className="h-5 w-5" />
-              </span>
-              <p className="text-sm font-semibold text-navy-700">
-                <span className="text-navy-500">Today's reminder:</span>{' '}
-                {affirmation}
-              </p>
-            </div>
+    <>
+      <section className={hero()}>
+        <div>
+          <Pill soft="#f0fdfa" text="#0f766e">
+            <Icon name="Sparkles" size={14} /> Wellness for real life
+          </Pill>
+          <h1 className={h1()} style={{ marginTop: 20 }}>
+            Your body and mind,{" "}
+            <span className="accent">explained kindly.</span>
+          </h1>
+          <p className={lead()}>
+            MY Journal is a friendly wellness library for teens and young adults. Explore how your body works, pick up simple
+            mind tools, and read stories that make you feel a little more like yourself.
+          </p>
+          <div className={ctaRow()}>
+            <Link
+              to="/explore"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "13px 24px",
+                borderRadius: 999,
+                background: "#0f172a",
+                color: "#fff",
+                fontWeight: 600,
+              }}
+            >
+              Start exploring <Icon name="ArrowRight" size={18} />
+            </Link>
+            <Link
+              to="/blog"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "13px 24px",
+                borderRadius: 999,
+                background: "transparent",
+                color: "#0f172a",
+                border: "1.5px solid #e2e8f0",
+                fontWeight: 600,
+              }}
+            >
+              Read the journal
+            </Link>
           </div>
-
-          {/* Hero visual */}
-          <div className="relative animate-pop-in lg:justify-self-end">
-            <div className="relative mx-auto grid w-full max-w-md grid-cols-2 gap-4">
-              <div className="card mt-8 rotate-[-4deg] p-5 transition-transform hover:rotate-0">
-                <div className="grid h-11 w-11 place-items-center rounded-xl bg-teal-100 text-teal-600">
-                  <Smile className="h-6 w-6" />
-                </div>
-                <p className="mt-3 font-display text-sm font-extrabold text-navy-900">
-                  Feeling overwhelmed?
-                </p>
-                <p className="mt-1 text-xs text-navy-600">
-                  We'll point you to the calm.
-                </p>
-              </div>
-              <div className="card p-5 rotate-[3deg] transition-transform hover:rotate-0">
-                <div className="grid h-11 w-11 place-items-center rounded-xl bg-hotpink-100 text-hotpink-600">
-                  <Heart className="h-6 w-6" fill="currentColor" />
-                </div>
-                <p className="mt-3 font-display text-sm font-extrabold text-navy-900">
-                  You belong here.
-                </p>
-                <p className="mt-1 text-xs text-navy-600">No judgement, ever.</p>
-              </div>
-              <div className="card rotate-[5deg] p-5 transition-transform hover:rotate-0">
-                <div className="grid h-11 w-11 place-items-center rounded-xl bg-sunny-100 text-sunny-600">
-                  <Star className="h-6 w-6" fill="currentColor" />
-                </div>
-                <p className="mt-3 font-display text-sm font-extrabold text-navy-900">
-                  Small steps win.
-                </p>
-                <p className="mt-1 text-xs text-navy-600">Progress, not perfect.</p>
-              </div>
-              <div className="card mt-8 rotate-[-3deg] p-5 transition-transform hover:rotate-0">
-                <div className="grid h-11 w-11 place-items-center rounded-xl bg-navy-100 text-navy-700">
-                  <Compass className="h-6 w-6" />
-                </div>
-                <p className="mt-3 font-display text-sm font-extrabold text-navy-900">
-                  Dream medical?
-                </p>
-                <p className="mt-1 text-xs text-navy-600">Find your role here.</p>
-              </div>
+          <div className={statRow()}>
+            <div className={stat()}>
+              <div className="num">8</div>
+              <div className="lbl">Wellness topics</div>
+            </div>
+            <div className={stat()}>
+              <div className="num">8</div>
+              <div className="lbl">Body systems</div>
+            </div>
+            <div className={stat()}>
+              <div className="num">{memberCount ?? "—"}</div>
+              <div className="lbl">Members</div>
+            </div>
+            <div className={stat()}>
+              <div className="num">10+</div>
+              <div className="lbl">Health careers</div>
             </div>
           </div>
         </div>
-
-        {/* motto banner */}
-        <div className="section relative pb-12">
-          <div className="rounded-3xl bg-navy-900 px-6 py-6 text-center shadow-soft sm:px-10 sm:py-8">
-            <p className="font-display text-2xl font-extrabold text-white sm:text-3xl">
-              {h?.motto ?? 'You Got This. We mean it.'}
-            </p>
-            <p className="mt-1 text-sm text-navy-200">
-              {h?.mottoSub ??
-                "Whatever you're carrying, you don't have to carry it alone."}
+        <div className={heroArt()}>
+          <div className={blob()} style={{ width: 220, height: 220, background: "rgba(20,184,166,0.35)", top: 40, left: 30 }} />
+          <div className={blob()} style={{ width: 160, height: 160, background: "rgba(236,72,153,0.28)", bottom: 60, right: 50, animationDelay: "1.5s" }} />
+          <div className={blob()} style={{ width: 110, height: 110, background: "rgba(245,158,11,0.3)", top: 120, right: 100, animationDelay: "0.8s" }} />
+          <div style={{ position: "relative", textAlign: "center", color: "#0f766e" }}>
+            <Icon name="HeartHand" size={64} strokeWidth={1.6} />
+            <p style={{ fontFamily: "Fraunces, serif", fontSize: "1.4rem", marginTop: 12, color: "#0f172a" }}>
+              You got this.
             </p>
           </div>
         </div>
       </section>
 
-      {/* Features */}
-      <section className="section py-16 sm:py-20">
-        <SectionHeader
-          eyebrow={h?.featuresEyebrow ?? "What's inside"}
-          title={h?.featuresTitle ?? 'Four ways MY Journal has your back'}
-          subtitle={
-            h?.featuresSubtitle ??
-            'Pick a starting point — or let the check-in choose one for you.'
-          }
-        />
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-          {features.map((f, i) => {
-            const a = accentClasses(f.accent);
-            const blurb = h?.features?.[i];
+      <section className={section()}>
+        <div className={membersStrip()}>
+          <Icon name="Users" size={26} color="#0d9488" />
+          <div style={{ flex: 1, minWidth: 200 }}>
+            <strong style={{ fontFamily: "Fraunces, serif", fontSize: "1.15rem" }}>
+              {memberCount !== null ? `${memberCount} ${memberCount === 1 ? "person has" : "people have"}` : "People are"} joined MY
+              Journal
+            </strong>
+            <p style={{ color: "#475569", fontSize: "0.9rem", marginTop: 2 }}>
+              {user
+                ? "Thanks for being part of the community."
+                : "Create an account to save your check-ins and message the team."}
+            </p>
+          </div>
+          {!user && (
+            <Link
+              to="/about"
+              style={{ color: "#0f766e", fontWeight: 600, fontSize: "0.9rem", display: "inline-flex", gap: 6, alignItems: "center" }}
+            >
+              Meet the community <Icon name="ArrowRight" size={16} />
+            </Link>
+          )}
+        </div>
+      </section>
+
+      <section className={section()} style={{ paddingTop: 8 }}>
+        <div className={sectionHead()}>
+          <div>
+            <Pill soft="#fdf2f8" text="#be185d">
+              <Icon name="Compass" size={14} /> Where to start
+            </Pill>
+            <h2 style={{ marginTop: 12 }}>Explore by topic</h2>
+          </div>
+          <Link to="/explore">
+            See all topics <Icon name="ArrowRight" size={16} />
+          </Link>
+        </div>
+        <div className={grid()}>
+          {cats.map((c) => {
+            const a = accent(c.accent);
             return (
-              <a
-                key={i}
-                href={routeToHash(f.route)}
-                className="card group flex flex-col p-6 transition-all duration-300 hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(16,23,70,0.25)]"
-              >
-                <span
-                  className={`grid h-14 w-14 place-items-center rounded-2xl ${a.bgSoft} ${a.text} transition-transform group-hover:scale-110 group-hover:-rotate-6`}
-                >
-                  <f.icon className="h-7 w-7" strokeWidth={2.2} />
-                </span>
-                <h3 className="mt-5 text-lg font-extrabold text-navy-900">
-                  {blurb?.title ?? `Feature ${i + 1}`}
-                </h3>
-                <p className="mt-2 flex-1 text-sm text-navy-600">
-                  {blurb?.desc ?? ''}
-                </p>
-                <span
-                  className={`mt-4 flex items-center gap-1.5 text-sm font-bold ${a.text}`}
-                >
-                  {f.cta}
-                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </span>
-              </a>
+              <Link key={c.id} to={`/explore/${c.slug}`} className={catCard({ $soft: a.soft })}>
+                <div className={catIcon({ $soft: a.soft, $text: a.text })}>
+                  <Icon name={iconForCategory(c.icon)} size={24} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: "1.2rem" }}>{c.name}</h3>
+                  <p style={{ color: "#64748b", fontSize: "0.92rem", marginTop: 6 }}>{c.tagline}</p>
+                </div>
+              </Link>
             );
           })}
         </div>
       </section>
 
-      {/* Topics */}
-      {categories.length > 0 && (
-        <section className="section py-4 sm:py-8">
-          <SectionHeader
-            eyebrow={h?.topicsEyebrow ?? 'We talk about'}
-            title={h?.topicsTitle ?? 'Topics we cover'}
-            subtitle={
-              h?.topicsSubtitle ??
-              "Whatever you're working through, there's a place to start here."
-            }
-          />
-          <div className="mt-10 flex flex-wrap justify-center gap-3">
-            {categories.map((c) => {
-              const a = accentClasses(c.accent);
-              const Icon = categoryIcon(c.icon);
-              return (
-                <a
-                  key={c.id}
-                  href={routeToHash({ name: 'blogs' })}
-                  className={`group flex items-center gap-2.5 rounded-full border-2 ${a.border} ${a.bgSoft} px-4 py-2.5 font-bold ${a.text} transition-all hover:-translate-y-0.5 hover:shadow-soft`}
-                >
-                  <Icon className="h-4 w-4 transition-transform group-hover:scale-110" />
-                  {c.name}
-                </a>
-              );
-            })}
+      <section className={section()}>
+        <div className={sectionHead()}>
+          <div>
+            <Pill soft="#eef2ff" text="#3730a3">
+              <Icon name="Book" size={14} /> From the journal
+            </Pill>
+            <h2 style={{ marginTop: 12 }}>Featured reads</h2>
           </div>
-        </section>
-      )}
-
-      {/* Featured blogs */}
-      {blogs.length > 0 && (
-        <section className="section py-16 sm:py-20">
-          <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
-            <SectionHeader
-              align="left"
-              eyebrow={h?.featuredEyebrow ?? 'From our team'}
-              title={h?.featuredTitle ?? 'Featured reads'}
-              subtitle={h?.featuredSubtitle ?? 'Hand-picked articles to lift your day.'}
-            />
-            <a
-              href={routeToHash({ name: 'blogs' })}
-              className="btn btn-ghost shrink-0"
-            >
-              See all
-              <ArrowRight className="h-4 w-4" />
-            </a>
-          </div>
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {blogs.map((b, i) => (
-              <BlogCard key={b.id} blog={b} index={i} />
-            ))}
-          </div>
-        </section>
-      )}
-
-      {/* CTA */}
-      <section className="section py-16 sm:py-20">
-        <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-teal-500 via-hotpink-500 to-sunny-400 p-8 text-center shadow-soft sm:p-14">
-          <div className="absolute inset-0 bg-bubble-fade opacity-30" />
-          <div className="relative">
-            <h2 className="font-display text-3xl font-extrabold text-white sm:text-4xl">
-              {h?.ctaTitle ?? 'One small step is still a step.'}
-            </h2>
-            <p className="mx-auto mt-3 max-w-xl text-white/90">
-              {h?.ctaSubtitle ??
-                'Take the 2-minute check-in and get personalized reads for where you are right now.'}
-            </p>
-            <a
-              href={routeToHash({ name: 'survey' })}
-              className="btn btn-navy mt-7 !bg-white !text-navy-900 hover:!bg-navy-50"
-            >
-              <ClipboardList className="h-5 w-5" />
-              I'm ready — take me to the check-in
-            </a>
-          </div>
+          <Link to="/blog">
+            All articles <Icon name="ArrowRight" size={16} />
+          </Link>
+        </div>
+        <div className={grid()}>
+          {featured.map((b) => {
+            const a = accent(b.accent);
+            return (
+              <Link key={b.id} to={`/blog/${b.slug}`} className={blogCard()}>
+                <Pill soft={a.soft} text={a.text}>
+                  <Icon name="Star" size={12} /> Featured
+                </Pill>
+                <h3>{b.title}</h3>
+                <p>{b.summary}</p>
+                <div className={meta()}>
+                  <span>{b.author}</span>
+                  <span>·</span>
+                  <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
+                    <Icon name="Clock" size={13} /> {b.read_minutes} min
+                  </span>
+                </div>
+              </Link>
+            );
+          })}
+          {featured.length === 0 && (
+            <Card>
+              <p style={{ color: "#64748b" }}>Featured stories are on the way.</p>
+            </Card>
+          )}
         </div>
       </section>
-    </div>
+    </>
   );
 }

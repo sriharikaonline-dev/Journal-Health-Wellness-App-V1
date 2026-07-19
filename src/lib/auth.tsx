@@ -1,72 +1,75 @@
-import { useEffect, useState, useCallback, createContext, useContext } from 'react';
-import type { ReactNode } from 'react';
-import type { Session, User } from '@supabase/supabase-js';
-import { supabase } from './supabase';
+import { createContext, useContext, useEffect, useState, useCallback } from "react";
+import type { Session, User } from "@supabase/supabase-js";
+import { supabase } from "./supabase.ts";
 
-interface AuthContextValue {
+interface AuthState {
   session: Session | null;
   user: User | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  signUp: (email: string, password: string) => Promise<{ error: string | null }>;
-  signOut: () => Promise<void>;
+  isOwner: boolean;
+  refreshOwner: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextValue | null>(null);
+const Ctx = createContext<AuthState>({
+  session: null,
+  user: null,
+  loading: true,
+  isOwner: false,
+  refreshOwner: () => Promise.resolve(),
+});
 
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isOwner, setIsOwner] = useState(false);
+
+  const refreshOwner = useCallback(async () => {
+    const s = session;
+    if (!s?.user) {
+      setIsOwner(false);
+      return;
+    }
+    const { data, error } = await supabase
+      .from("site_settings")
+      .select("owner_id")
+      .eq("id", 1)
+      .maybeSingle();
+    if (error) {
+      setIsOwner(false);
+      return;
+    }
+    setIsOwner(data?.owner_id === s.user.id);
+  }, [session]);
 
   useEffect(() => {
-    let mounted = true;
-
-    (async () => {
-      const { data } = await supabase.auth.getSession();
-      if (!mounted) return;
+    let active = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (!active) return;
       setSession(data.session);
       setLoading(false);
-    })();
-
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      (async () => {
-        if (!mounted) return;
-        setSession(newSession);
-        setLoading(false);
-      })();
     });
-
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
+      setSession(newSession);
+      setLoading(false);
+    });
     return () => {
-      mounted = false;
+      active = false;
       sub.subscription.unsubscribe();
     };
   }, []);
 
-  const signIn = useCallback(async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error?.message ?? null };
-  }, []);
-
-  const signUp = useCallback(async (email: string, password: string) => {
-    const { error } = await supabase.auth.signUp({ email, password });
-    return { error: error?.message ?? null };
-  }, []);
-
-  const signOut = useCallback(async () => {
-    await supabase.auth.signOut();
-  }, []);
+  useEffect(() => {
+    if (loading) return;
+    void refreshOwner();
+  }, [session, loading, refreshOwner]);
 
   return (
-    <AuthContext.Provider
-      value={{ session, user: session?.user ?? null, loading, signIn, signUp, signOut }}
-    >
+    <Ctx.Provider value={{ session, user: session?.user ?? null, loading, isOwner, refreshOwner }}>
       {children}
-    </AuthContext.Provider>
+    </Ctx.Provider>
   );
 }
 
-export function useAuth(): AuthContextValue {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used within AuthProvider');
-  return ctx;
+export function useAuth() {
+  return useContext(Ctx);
 }
