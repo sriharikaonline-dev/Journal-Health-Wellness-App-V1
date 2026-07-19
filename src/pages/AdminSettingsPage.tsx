@@ -22,6 +22,7 @@ import {
   getTeamPasscodeHash,
   adminSetTeamPasscodeHash,
   uploadImage,
+  getSiteOwnerId,
 } from '../lib/data';
 import { useAuth } from '../lib/auth';
 import { routeToHash } from '../lib/router';
@@ -36,13 +37,14 @@ import {
 type Tab = 'home' | 'about';
 
 export function AdminSettingsPage() {
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const [settings, setSettings] = useState<SiteSettings | null>(null);
   const [tab, setTab] = useState<Tab>('home');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+  const [isOwner, setIsOwner] = useState(false);
 
   // Team passcode management
   const [hasPasscode, setHasPasscode] = useState(false);
@@ -58,6 +60,8 @@ export function AdminSettingsPage() {
     try {
       const s = await adminGetSiteSettings();
       setSettings(s);
+      const ownerId = await getSiteOwnerId();
+      setIsOwner(Boolean(user && ownerId && user.id === ownerId));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load settings');
     } finally {
@@ -226,8 +230,9 @@ export function AdminSettingsPage() {
         </button>
       </div>
 
-      <TeamPasscodeSection
-        hasPasscode={hasPasscode}
+      {isOwner && (
+        <TeamPasscodeSection
+          hasPasscode={hasPasscode}
         newCode={newCode}
         setNewCode={(v) => {
           setNewCode(normalizePasscode(v));
@@ -239,9 +244,10 @@ export function AdminSettingsPage() {
         codeSaving={codeSaving}
         codeMsg={codeMsg}
         codeError={codeError}
-        onSave={savePasscode}
-        onRemove={removePasscode}
-      />
+          onSave={savePasscode}
+          onRemove={removePasscode}
+        />
+      )}
 
       <div className="mt-6 max-w-2xl space-y-5">
         {tab === 'home' ? (

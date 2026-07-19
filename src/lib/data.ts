@@ -169,6 +169,21 @@ export async function adminGetSiteSettings(): Promise<SiteSettings> {
   return mergeSettings(fallback.siteSettings, data.data as Partial<SiteSettings>);
 }
 
+export async function getSiteOwnerId(): Promise<string | null> {
+  if (!supabaseAvailable) return null;
+  try {
+    const { data, error } = await supabase
+      .from('site_settings')
+      .select('owner_id')
+      .eq('id', 1)
+      .maybeSingle();
+    if (error || !data) return null;
+    return (data.owner_id as string | null) ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function adminSaveSiteSettings(settings: SiteSettings): Promise<void> {
   const { error } = await supabase
     .from('site_settings')
