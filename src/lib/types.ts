@@ -25,8 +25,15 @@ export interface Profession {
   id: string;
   slug: string;
   name: string;
+  summary: string;
+  years: string;
+  skills: string[];
+  day_in_life: string;
   accent: Accent;
+  sort_order: number;
 }
+
+export type MedicalProfession = Profession;
 
 export interface Blog {
   id: string;
@@ -41,12 +48,14 @@ export interface Blog {
   published: boolean;
   featured: boolean;
   category_id: string | null;
+  category?: Category | null;
   created_at: string | null;
 }
 
 export interface SurveyQuestion {
   id: string;
   category_id: string | null;
+  category_slug?: string;
   question: string;
   prompt: string | null;
   sort_order: number;
@@ -81,4 +90,55 @@ export interface ChatMessage {
 export interface ChatRead {
   user_id: string;
   last_read_at: string;
+}
+
+export interface FeatureBlurb {
+  title: string;
+  desc: string;
+}
+
+export interface BlogSection {
+  heading: string;
+  text: string;
+}
+
+export interface SiteSettings {
+  home: {
+    heroEyebrow: string;
+    heroTitle: string;
+    heroHighlight: string;
+    heroTail: string;
+    heroSubtitle: string;
+    affirmations: string[];
+    motto: string;
+    mottoSub: string;
+    features: FeatureBlurb[];
+    featuresEyebrow: string;
+    featuresTitle: string;
+    featuresSubtitle: string;
+    topicsEyebrow: string;
+    topicsTitle: string;
+    topicsSubtitle: string;
+    featuredEyebrow: string;
+    featuredTitle: string;
+    featuredSubtitle: string;
+    ctaTitle: string;
+    ctaSubtitle: string;
+  };
+  about: {
+    eyebrow: string;
+    title: string;
+    highlight: string;
+    paragraph: string;
+    whatWeDoEyebrow: string;
+    whatWeDoTitle: string;
+    whatWeDoSubtitle: string;
+    whatWeDo: FeatureBlurb[];
+    valuesEyebrow: string;
+    valuesTitle: string;
+    values: FeatureBlurb[];
+    noteText: string;
+    ctaTitle: string;
+    ctaSubtitle: string;
+  };
 }

@@ -276,3 +276,46 @@ const emptyCls = styled("div")`
 export function EmptyState({ children }: { children: React.ReactNode }) {
   return <div className={emptyCls()}>{children}</div>;
 }
+
+export function LoadingState({ label = "Loading…" }: { label?: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-3 py-16 text-navy-500">
+      <Spinner className="h-6 w-6" />
+      <span className="text-sm font-semibold">{label}</span>
+    </div>
+  );
+}
+
+export function ErrorState({ message = "Something went wrong." }: { message?: string }) {
+  return (
+    <div className="mx-auto max-w-md rounded-2xl border-2 border-hotpink-200 bg-hotpink-50 px-5 py-4 text-center text-sm font-semibold text-hotpink-700">
+      {message}
+    </div>
+  );
+}
+
+export function SectionHeader({
+  eyebrow,
+  title,
+  subtitle,
+  center = true,
+}: {
+  eyebrow?: string;
+  title: React.ReactNode;
+  subtitle?: React.ReactNode;
+  center?: boolean;
+}) {
+  return (
+    <div className={center ? "mx-auto max-w-2xl text-center" : "max-w-2xl"}>
+      {eyebrow && (
+        <span className="chip bg-teal-100 text-teal-700 mx-auto">
+          {eyebrow}
+        </span>
+      )}
+      <h2 className="mt-3 text-3xl font-extrabold text-navy-900 sm:text-4xl">
+        {title}
+      </h2>
+      {subtitle && <p className="mt-3 text-navy-600">{subtitle}</p>}
+    </div>
+  );
+}

@@ -8,6 +8,9 @@ interface AuthState {
   loading: boolean;
   isOwner: boolean;
   refreshOwner: () => Promise<void>;
+  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
+  signUp: (email: string, password: string) => Promise<{ error: string | null }>;
+  signOut: () => Promise<void>;
 }
 
 const Ctx = createContext<AuthState>({
@@ -16,6 +19,9 @@ const Ctx = createContext<AuthState>({
   loading: true,
   isOwner: false,
   refreshOwner: () => Promise.resolve(),
+  signIn: async () => ({ error: "not initialized" }),
+  signUp: async () => ({ error: "not initialized" }),
+  signOut: async () => {},
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -41,6 +47,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsOwner(data?.owner_id === s.user.id);
   }, [session]);
 
+  const signIn = useCallback(async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    return { error: error?.message ?? null };
+  }, []);
+
+  const signUp = useCallback(async (email: string, password: string) => {
+    const { error } = await supabase.auth.signUp({ email, password });
+    return { error: error?.message ?? null };
+  }, []);
+
+  const signOut = useCallback(async () => {
+    await supabase.auth.signOut();
+  }, []);
+
   useEffect(() => {
     let active = true;
     supabase.auth.getSession().then(({ data }) => {
@@ -64,7 +84,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [session, loading, refreshOwner]);
 
   return (
-    <Ctx.Provider value={{ session, user: session?.user ?? null, loading, isOwner, refreshOwner }}>
+    <Ctx.Provider value={{ session, user: session?.user ?? null, loading, isOwner, refreshOwner, signIn, signUp, signOut }}>
       {children}
     </Ctx.Provider>
   );
