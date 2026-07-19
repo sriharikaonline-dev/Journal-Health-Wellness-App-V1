@@ -143,7 +143,13 @@ export interface Profile {
   created_at: string;
 }
 
+export interface SiteContactCopy {
+  email: string;
+  instagram: string;
+}
+
 export interface SiteSettings {
   home: SiteHomeCopy;
   about: SiteAboutCopy;
+  contact: SiteContactCopy;
 }

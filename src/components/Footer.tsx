@@ -1,6 +1,9 @@
+import { useEffect, useState } from 'react';
 import { Heart, Mail, Instagram, HeartHandshake } from 'lucide-react';
 import type { Route } from '../lib/router';
 import { routeToHash } from '../lib/router';
+import { getSiteSettings } from '../lib/data';
+import type { SiteSettings } from '../lib/types';
 
 const cols: { heading: string; links: { label: string; route: Route }[] }[] = [
   {
@@ -23,6 +26,18 @@ const cols: { heading: string; links: { label: string; route: Route }[] }[] = [
 ];
 
 export function Footer() {
+  const [settings, setSettings] = useState<SiteSettings | null>(null);
+  useEffect(() => {
+    let active = true;
+    getSiteSettings()
+      .then((s) => active && setSettings(s))
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+  const email = settings?.contact.email ?? 'hello@myjournal.org';
+  const instagram = (settings?.contact.instagram ?? '').trim();
   return (
     <footer className="mt-20 bg-navy-900 text-navy-100">
       <div className="section py-14">
@@ -76,21 +91,23 @@ export function Footer() {
             </p>
             <div className="mt-4 flex gap-3">
               <a
-                href="mailto:hello@myjournal.org"
+                href={`mailto:${email}`}
                 className="grid h-10 w-10 place-items-center rounded-xl bg-navy-800 text-white transition-colors hover:bg-teal-500"
                 aria-label="Email us"
               >
                 <Mail className="h-5 w-5" />
               </a>
-              <a
-                href="https://instagram.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="grid h-10 w-10 place-items-center rounded-xl bg-navy-800 text-white transition-colors hover:bg-hotpink-500"
-                aria-label="Instagram"
-              >
-                <Instagram className="h-5 w-5" />
-              </a>
+              {instagram ? (
+                <a
+                  href={instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="grid h-10 w-10 place-items-center rounded-xl bg-navy-800 text-white transition-colors hover:bg-hotpink-500"
+                  aria-label="Instagram"
+                >
+                  <Instagram className="h-5 w-5" />
+                </a>
+              ) : null}
               <a
                 href={routeToHash({ name: 'about' })}
                 className="grid h-10 w-10 place-items-center rounded-xl bg-navy-800 text-white transition-colors hover:bg-sunny-400 hover:text-navy-900"

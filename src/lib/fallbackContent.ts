@@ -152,6 +152,10 @@ export const fallbackSiteSettings: SiteSettings = {
     ctaTitle: 'Come as you are.',
     ctaSubtitle: "Start with a check-in, browse a blog, or just look around. There's no wrong first step.",
   },
+  contact: {
+    email: 'hello@myjournal.org',
+    instagram: 'https://instagram.com',
+  },
 };
 
 export const fallback = {

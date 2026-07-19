@@ -14,6 +14,8 @@ import {
   Eye,
   EyeOff,
   Upload,
+  Mail,
+  Instagram,
 } from 'lucide-react';
 import type { SiteSettings, FeatureBlurb } from '../lib/types';
 import {
@@ -34,7 +36,7 @@ import {
   hashPasscode,
 } from '../lib/passcode';
 
-type Tab = 'home' | 'about';
+type Tab = 'home' | 'about' | 'contact';
 
 export function AdminSettingsPage() {
   const { signOut, user } = useAuth();
@@ -80,6 +82,10 @@ export function AdminSettingsPage() {
   };
   const updateAbout = (patch: Partial<SiteSettings['about']>) => {
     setSettings((s) => (s ? { ...s, about: { ...s.about, ...patch } } : s));
+    setSaved(false);
+  };
+  const updateContact = (patch: Partial<SiteSettings['contact']>) => {
+    setSettings((s) => (s ? { ...s, contact: { ...s.contact, ...patch } } : s));
     setSaved(false);
   };
 
@@ -228,6 +234,15 @@ export function AdminSettingsPage() {
           <Heart className="h-4 w-4" />
           About Page
         </button>
+        <button
+          onClick={() => setTab('contact')}
+          className={`flex flex-1 items-center justify-center gap-1.5 rounded-full px-5 py-2 text-sm font-bold transition-colors sm:flex-none ${
+            tab === 'contact' ? 'bg-white text-navy-900 shadow-soft' : 'text-navy-500'
+          }`}
+        >
+          <Mail className="h-4 w-4" />
+          Contact & Social
+        </button>
       </div>
 
       {isOwner && (
@@ -252,8 +267,10 @@ export function AdminSettingsPage() {
       <div className="mt-6 max-w-2xl space-y-5">
         {tab === 'home' ? (
           <HomeEditor settings={settings} onChange={updateHome} />
-        ) : (
+        ) : tab === 'about' ? (
           <AboutEditor settings={settings} onChange={updateAbout} />
+        ) : (
+          <ContactEditor settings={settings} onChange={updateContact} />
         )}
       </div>
     </div>
@@ -341,6 +358,45 @@ function AboutEditor({
       <SectionLabel>Call-to-action banner</SectionLabel>
       <TextField label="Heading" value={a.ctaTitle} onChange={(v) => onChange({ ctaTitle: v })} />
       <TextField label="Subtitle" value={a.ctaSubtitle} onChange={(v) => onChange({ ctaSubtitle: v })} />
+    </>
+  );
+}
+
+function ContactEditor({
+  settings,
+  onChange,
+}: {
+  settings: SiteSettings;
+  onChange: (patch: Partial<SiteSettings['contact']>) => void;
+}) {
+  const c = settings.contact;
+  const normalizedIg = c.instagram.trim().replace(/\/$/, '');
+  const igHandle = normalizedIg
+    ? '@' + normalizedIg.replace(/^https?:\/\/(www\.)?instagram\.com\//, '').replace(/^@/, '')
+    : '';
+  return (
+    <>
+      <SectionLabel>Email</SectionLabel>
+      <TextField
+        label="Contact email"
+        value={c.email}
+        onChange={(v) => onChange({ email: v })}
+        hint="The address visitors reach when they tap the email icon in the footer. Use an inbox you actually check."
+      />
+
+      <SectionLabel>Instagram</SectionLabel>
+      <TextField
+        label="Instagram URL"
+        value={c.instagram}
+        onChange={(v) => onChange({ instagram: v })}
+        hint="Paste your full profile link, e.g. https://instagram.com/yourhandle. Leave blank to hide the Instagram icon."
+      />
+      {igHandle && (
+        <div className="flex items-center gap-2 rounded-xl border-2 border-navy-100 bg-navy-50/50 px-4 py-2.5 text-sm font-semibold text-navy-700">
+          <Instagram className="h-4 w-4 text-hotpink-500" />
+          Preview: {igHandle}
+        </div>
+      )}
     </>
   );
 }
