@@ -10,12 +10,26 @@ import {
   X,
   Trash2,
   LogOut,
+  KeyRound,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import type { SiteSettings, FeatureBlurb } from '../lib/types';
-import { adminGetSiteSettings, adminSaveSiteSettings } from '../lib/data';
+import {
+  adminGetSiteSettings,
+  adminSaveSiteSettings,
+  getTeamPasscodeHash,
+  adminSetTeamPasscodeHash,
+} from '../lib/data';
 import { useAuth } from '../lib/auth';
 import { routeToHash } from '../lib/router';
 import { LoadingState } from '../components/ui';
+import {
+  PASSCODE_LENGTH,
+  normalizePasscode,
+  isValidPasscodeFormat,
+  hashPasscode,
+} from '../lib/passcode';
 
 type Tab = 'home' | 'about';
 
@@ -27,6 +41,14 @@ export function AdminSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
+
+  // Team passcode management
+  const [hasPasscode, setHasPasscode] = useState(false);
+  const [newCode, setNewCode] = useState('');
+  const [showCode, setShowCode] = useState(false);
+  const [codeSaving, setCodeSaving] = useState(false);
+  const [codeMsg, setCodeMsg] = useState<string | null>(null);
+  const [codeError, setCodeError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -43,6 +65,7 @@ export function AdminSettingsPage() {
 
   useEffect(() => {
     load();
+    getTeamPasscodeHash().then((h) => setHasPasscode(Boolean(h)));
   }, [load]);
 
   const updateHome = (patch: Partial<SiteSettings['home']>) => {
@@ -65,6 +88,44 @@ export function AdminSettingsPage() {
       setError(e instanceof Error ? e.message : 'Failed to save');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const savePasscode = async () => {
+    setCodeError(null);
+    setCodeMsg(null);
+    const trimmed = newCode.trim();
+    if (trimmed && !isValidPasscodeFormat(trimmed)) {
+      setCodeError(`Code must be exactly ${PASSCODE_LENGTH} digits.`);
+      return;
+    }
+    setCodeSaving(true);
+    try {
+      const hash = trimmed ? await hashPasscode(trimmed) : null;
+      await adminSetTeamPasscodeHash(hash);
+      setHasPasscode(Boolean(hash));
+      setNewCode('');
+      setCodeMsg(hash ? 'Team code updated. Share it with your team.' : 'Team code removed.');
+    } catch (e) {
+      setCodeError(e instanceof Error ? e.message : 'Failed to update team code');
+    } finally {
+      setCodeSaving(false);
+    }
+  };
+
+  const removePasscode = async () => {
+    setCodeError(null);
+    setCodeMsg(null);
+    setCodeSaving(true);
+    try {
+      await adminSetTeamPasscodeHash(null);
+      setHasPasscode(false);
+      setNewCode('');
+      setCodeMsg('Team code removed. The sign-in page will now reject access.');
+    } catch (e) {
+      setCodeError(e instanceof Error ? e.message : 'Failed to remove team code');
+    } finally {
+      setCodeSaving(false);
     }
   };
 
@@ -162,6 +223,23 @@ export function AdminSettingsPage() {
           About Page
         </button>
       </div>
+
+      <TeamPasscodeSection
+        hasPasscode={hasPasscode}
+        newCode={newCode}
+        setNewCode={(v) => {
+          setNewCode(normalizePasscode(v));
+          setCodeMsg(null);
+          setCodeError(null);
+        }}
+        showCode={showCode}
+        setShowCode={setShowCode}
+        codeSaving={codeSaving}
+        codeMsg={codeMsg}
+        codeError={codeError}
+        onSave={savePasscode}
+        onRemove={removePasscode}
+      />
 
       <div className="mt-6 max-w-2xl space-y-5">
         {tab === 'home' ? (
@@ -428,6 +506,113 @@ function BlurbListEditor({
         <Plus className="h-4 w-4" />
         Add card
       </button>
+    </div>
+  );
+}
+
+function TeamPasscodeSection({
+  hasPasscode,
+  newCode,
+  setNewCode,
+  showCode,
+  setShowCode,
+  codeSaving,
+  codeMsg,
+  codeError,
+  onSave,
+  onRemove,
+}: {
+  hasPasscode: boolean;
+  newCode: string;
+  setNewCode: (v: string) => void;
+  showCode: boolean;
+  setShowCode: (v: boolean) => void;
+  codeSaving: boolean;
+  codeMsg: string | null;
+  codeError: string | null;
+  onSave: () => void;
+  onRemove: () => void;
+}) {
+  return (
+    <div className="max-w-2xl rounded-2xl border-2 border-navy-100 bg-white p-6 shadow-soft">
+      <div className="flex items-start gap-3">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-navy-100 text-navy-700">
+          <KeyRound className="h-5 w-5" />
+        </span>
+        <div className="flex-1">
+          <h3 className="font-display text-lg font-extrabold text-navy-900">
+            Team Sign-In Code
+          </h3>
+          <p className="mt-1 text-sm text-navy-600">
+            A 4-digit code that gates the Team Sign-In page. Only people with this
+            code can reach the login form.
+          </p>
+          <p className="mt-2 text-xs font-semibold text-navy-400">
+            Status: {hasPasscode ? 'Code is set' : 'No code set — sign-in is locked'}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-5">
+        <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-navy-500">
+          {hasPasscode ? 'Set a new code (replaces current)' : 'Set a code'}
+        </label>
+        <div className="relative max-w-[200px]">
+          <input
+            type={showCode ? 'text' : 'password'}
+            inputMode="numeric"
+            autoComplete="off"
+            maxLength={PASSCODE_LENGTH}
+            value={newCode}
+            onChange={(e) => setNewCode(e.target.value)}
+            placeholder="••••"
+            className="w-full rounded-xl border-2 border-navy-100 bg-white py-2.5 pl-4 pr-10 text-center text-xl font-extrabold tracking-[0.4em] text-navy-800 outline-none transition-colors placeholder:tracking-[0.4em] placeholder:text-navy-300 focus:border-teal-300"
+          />
+          <button
+            type="button"
+            onClick={() => setShowCode(!showCode)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 grid h-8 w-8 place-items-center rounded-lg text-navy-400 hover:bg-navy-50 hover:text-navy-700"
+            aria-label={showCode ? 'Hide code' : 'Show code'}
+          >
+            {showCode ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          </button>
+        </div>
+        <div className="mt-2 flex gap-2">
+          <button
+            type="button"
+            onClick={onSave}
+            disabled={codeSaving}
+            className="btn btn-primary disabled:opacity-60"
+          >
+            <Save className="h-4 w-4" />
+            {codeSaving ? 'Saving…' : 'Save code'}
+          </button>
+          {hasPasscode && (
+            <button
+              type="button"
+              onClick={onRemove}
+              disabled={codeSaving}
+              className="btn btn-ghost text-hotpink-600 hover:bg-hotpink-50 disabled:opacity-60"
+            >
+              <Trash2 className="h-4 w-4" />
+              Remove
+            </button>
+          )}
+        </div>
+
+        {codeError && (
+          <div className="mt-3 flex items-start gap-2 rounded-xl border-2 border-hotpink-200 bg-hotpink-50 px-4 py-2.5 text-sm font-semibold text-hotpink-700">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
+            {codeError}
+          </div>
+        )}
+        {codeMsg && (
+          <div className="mt-3 flex items-start gap-2 rounded-xl border-2 border-teal-200 bg-teal-50 px-4 py-2.5 text-sm font-semibold text-teal-700">
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
+            {codeMsg}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
