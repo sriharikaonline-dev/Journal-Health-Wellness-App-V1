@@ -97,6 +97,7 @@ export interface SiteAboutCopy {
   title: string;
   highlight: string;
   paragraph: string;
+  heroImage: string | null;
   whatWeDoEyebrow: string;
   whatWeDoTitle: string;
   whatWeDoSubtitle: string;

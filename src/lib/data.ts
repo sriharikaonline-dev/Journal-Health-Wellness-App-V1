@@ -13,6 +13,26 @@ import type {
 } from './types';
 import { fallback } from './fallbackContent';
 
+// --- Image uploads (Supabase Storage) ---------------------------------------
+
+export async function uploadImage(
+  file: File,
+  folder = 'uploads',
+): Promise<string | null> {
+  if (!supabaseAvailable) return null;
+  const ext = (file.name.split('.').pop() ?? 'jpg').toLowerCase();
+  const path = `${folder}/${crypto.randomUUID()}.${ext}`;
+  const { error } = await supabase.storage
+    .from('images')
+    .upload(path, file, { cacheControl: '3600', upsert: false });
+  if (error) {
+    console.warn('uploadImage error', error.message);
+    return null;
+  }
+  const { data } = supabase.storage.from('images').getPublicUrl(path);
+  return data.publicUrl ?? null;
+}
+
 async function tryQuery<T>(
   fetcher: () => Promise<{ data: T | null; error: { message: string } | null }>,
   fallbackData: T,
@@ -476,7 +496,27 @@ export async function getFounders(): Promise<Founder[]> {
   return (data ?? []) as Founder[];
 }
 
-// ===== Chat inbox (signed-in members ask, owner reads) =====
+// ===== Chat inbox (members + anonymous visitors ask, owner reads) =====
+
+const ANON_SESSION_KEY = 'myj_chat_session';
+const ANON_NAME_KEY = 'myj_chat_name';
+
+export function getAnonSessionId(): string {
+  let id = localStorage.getItem(ANON_SESSION_KEY);
+  if (!id) {
+    id = crypto.randomUUID();
+    localStorage.setItem(ANON_SESSION_KEY, id);
+  }
+  return id;
+}
+
+export function getAnonName(): string {
+  return localStorage.getItem(ANON_NAME_KEY) ?? '';
+}
+
+export function setAnonName(name: string): void {
+  localStorage.setItem(ANON_NAME_KEY, name);
+}
 
 export async function fetchMyChatMessages(): Promise<ChatMessage[]> {
   const { data, error } = await supabase
@@ -485,6 +525,20 @@ export async function fetchMyChatMessages(): Promise<ChatMessage[]> {
     .order('created_at', { ascending: true });
   if (error) {
     console.warn('fetchMyChatMessages error', error.message);
+    return [];
+  }
+  return (data ?? []) as ChatMessage[];
+}
+
+export async function fetchAnonChatMessages(): Promise<ChatMessage[]> {
+  const sessionId = getAnonSessionId();
+  const { data, error } = await supabase
+    .from('chat_messages')
+    .select('*')
+    .eq('anon_session_id', sessionId)
+    .order('created_at', { ascending: true });
+  if (error) {
+    console.warn('fetchAnonChatMessages error', error.message);
     return [];
   }
   return (data ?? []) as ChatMessage[];
@@ -510,6 +564,27 @@ export async function sendChatMessage(message: string): Promise<ChatMessage | nu
     .single();
   if (error) {
     console.warn('sendChatMessage error', error.message);
+    return null;
+  }
+  return data as ChatMessage;
+}
+
+export async function sendAnonChatMessage(
+  message: string,
+  name?: string,
+): Promise<ChatMessage | null> {
+  const sessionId = getAnonSessionId();
+  const { data, error } = await supabase
+    .from('chat_messages')
+    .insert({
+      message,
+      anon_session_id: sessionId,
+      user_email: name ? name.trim() : null,
+    })
+    .select()
+    .single();
+  if (error) {
+    console.warn('sendAnonChatMessage error', error.message);
     return null;
   }
   return data as ChatMessage;

@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import {
   ArrowLeft,
   Save,
@@ -13,6 +13,7 @@ import {
   KeyRound,
   Eye,
   EyeOff,
+  Upload,
 } from 'lucide-react';
 import type { SiteSettings, FeatureBlurb } from '../lib/types';
 import {
@@ -20,6 +21,7 @@ import {
   adminSaveSiteSettings,
   getTeamPasscodeHash,
   adminSetTeamPasscodeHash,
+  uploadImage,
 } from '../lib/data';
 import { useAuth } from '../lib/auth';
 import { routeToHash } from '../lib/router';
@@ -314,6 +316,7 @@ function AboutEditor({
       <TextField label="Title" value={a.title} onChange={(v) => onChange({ title: v })} />
       <TextField label="Highlighted phrase" value={a.highlight} onChange={(v) => onChange({ highlight: v })} hint="Shown in the colorful gradient text." />
       <TextAreaField label="Paragraph" value={a.paragraph} onChange={(v) => onChange({ paragraph: v })} />
+      <ImageField label="Hero photo" value={a.heroImage ?? ''} onChange={(v) => onChange({ heroImage: v || null })} hint="A photo of you and the team, shown under the hero text on the About page." />
 
       <SectionLabel>What we do</SectionLabel>
       <TextField label="Eyebrow" value={a.whatWeDoEyebrow} onChange={(v) => onChange({ whatWeDoEyebrow: v })} />
@@ -613,6 +616,88 @@ function TeamPasscodeSection({
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function ImageField({
+  label,
+  value,
+  onChange,
+  hint,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  hint?: string;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = async (file?: File) => {
+    if (!file || uploading) return;
+    setUploading(true);
+    setErr(null);
+    const url = await uploadImage(file, 'about');
+    setUploading(false);
+    if (!url) {
+      setErr('Upload failed. Try a smaller image.');
+      return;
+    }
+    onChange(url);
+  };
+
+  return (
+    <div>
+      <label className="mb-1.5 block text-sm font-bold text-navy-800">{label}</label>
+      <div className="space-y-3">
+        {value && (
+          <div className="relative inline-block">
+            <img
+              src={value}
+              alt="Preview"
+              className="h-24 w-24 rounded-2xl object-cover ring-2 ring-navy-100"
+            />
+            <button
+              type="button"
+              onClick={() => onChange('')}
+              className="absolute -right-2 -top-2 grid h-6 w-6 place-items-center rounded-full bg-hotpink-500 text-white shadow-soft"
+              aria-label="Remove image"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            onChange={(e) => handleFile(e.target.files?.[0])}
+            className="hidden"
+          />
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            className="inline-flex items-center gap-2 rounded-xl border-2 border-navy-100 bg-white px-3 py-2 text-sm font-bold text-navy-700 transition-colors hover:border-teal-300 disabled:opacity-50"
+          >
+            <Upload className="h-4 w-4" />
+            {uploading ? 'Uploading…' : 'Upload image'}
+          </button>
+          <span className="text-xs text-navy-400">or paste a URL below</span>
+        </div>
+        <input
+          type="url"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          placeholder="https://…"
+          className="w-full rounded-xl border-2 border-navy-100 bg-white px-3.5 py-2.5 text-sm text-navy-800 outline-none focus:border-teal-300"
+        />
+        {err && <p className="text-xs font-semibold text-hotpink-600">{err}</p>}
+      </div>
+      {hint && <p className="mt-1.5 text-xs text-navy-500">{hint}</p>}
     </div>
   );
 }

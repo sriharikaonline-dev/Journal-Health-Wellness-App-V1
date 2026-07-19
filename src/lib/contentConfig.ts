@@ -1,7 +1,15 @@
 import type { Accent, Category } from './types';
 import type { ContentType } from './data';
 
-export type FieldType = 'text' | 'textarea' | 'number' | 'select' | 'color' | 'array' | 'relation';
+export type FieldType =
+  | 'text'
+  | 'textarea'
+  | 'number'
+  | 'select'
+  | 'color'
+  | 'array'
+  | 'relation'
+  | 'image';
 
 export interface FieldConfig {
   key: string;
@@ -127,7 +135,7 @@ export const CONTENT_CONFIGS: Record<ContentType, ContentConfig> = {
       { key: 'name', label: 'Name', type: 'text', required: true, placeholder: 'Jane Doe' },
       { key: 'role', label: 'Role', type: 'text', required: true, placeholder: 'Co-Founder & Editor' },
       { key: 'description', label: 'Description', type: 'textarea', required: true, placeholder: 'A short bio about this founder.' },
-      { key: 'photo_url', label: 'Photo URL', type: 'text', hint: 'Paste an image URL. Leave blank for a placeholder.', placeholder: 'https://…' },
+      { key: 'photo_url', label: 'Photo', type: 'image', hint: 'Upload a photo or paste an image URL. Leave blank for a placeholder.', placeholder: 'https://…' },
       { key: 'sort_order', label: 'Sort order', type: 'number', hint: 'Lower numbers appear first.' },
     ],
   },

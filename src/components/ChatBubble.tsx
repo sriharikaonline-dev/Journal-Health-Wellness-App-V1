@@ -3,7 +3,11 @@ import { MessageCircle, X, Send, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../lib/auth';
 import {
   fetchMyChatMessages,
+  fetchAnonChatMessages,
   sendChatMessage,
+  sendAnonChatMessage,
+  getAnonName,
+  setAnonName,
   type ChatMessage,
 } from '../lib/data';
 
@@ -12,6 +16,7 @@ export function ChatBubble() {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [draft, setDraft] = useState('');
+  const [name, setName] = useState(getAnonName());
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -19,14 +24,15 @@ export function ChatBubble() {
   useEffect(() => {
     if (!open) return;
     let active = true;
-    fetchMyChatMessages().then((m) => {
+    const fetcher = user ? fetchMyChatMessages : fetchAnonChatMessages;
+    fetcher().then((m) => {
       if (!active) return;
       setMessages(m);
     });
     return () => {
       active = false;
     };
-  }, [open]);
+  }, [open, user]);
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -34,14 +40,14 @@ export function ChatBubble() {
     }
   }, [messages]);
 
-  if (!user) return null;
-
   const send = async () => {
     const v = draft.trim();
     if (!v || sending) return;
     setSending(true);
     setError(null);
-    const msg = await sendChatMessage(v);
+    const msg = user
+      ? await sendChatMessage(v)
+      : await sendAnonChatMessage(v, name);
     setSending(false);
     if (!msg) {
       setError('Could not send. Please try again.');
@@ -68,7 +74,9 @@ export function ChatBubble() {
             <div>
               <p className="text-sm font-extrabold">Questions? Ask away.</p>
               <p className="text-xs text-navy-200">
-                The team sees your messages in the Team Workspace.
+                {user
+                  ? 'The team sees your messages in the Team Workspace.'
+                  : 'Leave your name and a question — the team will reply here.'}
               </p>
             </div>
           </div>
@@ -80,7 +88,9 @@ export function ChatBubble() {
               </p>
             ) : (
               messages.map((m) => {
-                const mine = m.user_id === user.id;
+                const mine = user
+                  ? m.user_id === user.id
+                  : m.anon_session_id != null;
                 return (
                   <div
                     key={m.id}
@@ -143,27 +153,40 @@ export function ChatBubble() {
             <p className="px-4 py-1 text-xs font-semibold text-hotpink-600">{error}</p>
           )}
 
-          <div className="flex items-center gap-2 border-t-2 border-navy-100 bg-white p-3">
-            <input
-              value={draft}
-              onChange={(e) => setDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  send();
-                }
-              }}
-              placeholder="Type your question…"
-              className="flex-1 rounded-xl border-2 border-navy-100 bg-white px-3 py-2 text-sm text-navy-800 outline-none focus:border-teal-300"
-            />
-            <button
-              onClick={send}
-              disabled={sending || !draft.trim()}
-              className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-hotpink-500 to-teal-500 text-white transition-transform hover:scale-105 disabled:opacity-50"
-              aria-label="Send"
-            >
-              <Send className="h-4 w-4" />
-            </button>
+          <div className="space-y-2 border-t-2 border-navy-100 bg-white p-3">
+            {!user && (
+              <input
+                value={name}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  setAnonName(e.target.value);
+                }}
+                placeholder="Your name (optional)"
+                className="w-full rounded-xl border-2 border-navy-100 bg-white px-3 py-2 text-sm text-navy-800 outline-none focus:border-teal-300"
+              />
+            )}
+            <div className="flex items-center gap-2">
+              <input
+                value={draft}
+                onChange={(e) => setDraft(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    send();
+                  }
+                }}
+                placeholder="Type your question…"
+                className="flex-1 rounded-xl border-2 border-navy-100 bg-white px-3 py-2 text-sm text-navy-800 outline-none focus:border-teal-300"
+              />
+              <button
+                onClick={send}
+                disabled={sending || !draft.trim()}
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-gradient-to-br from-hotpink-500 to-teal-500 text-white transition-transform hover:scale-105 disabled:opacity-50"
+                aria-label="Send"
+              >
+                <Send className="h-4 w-4" />
+              </button>
+            </div>
           </div>
         </div>
       )}

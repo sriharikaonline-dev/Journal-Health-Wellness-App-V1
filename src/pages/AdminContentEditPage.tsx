@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import {
   ArrowLeft,
   Save,
@@ -7,6 +7,7 @@ import {
   Wand2,
   Plus,
   X,
+  Upload,
 } from 'lucide-react';
 import type { Category, Accent } from '../lib/types';
 import {
@@ -14,6 +15,7 @@ import {
   adminSaveContent,
   getCategories,
   suggestSlug,
+  uploadImage,
   type ContentType,
 } from '../lib/data';
 import {
@@ -283,6 +285,16 @@ function FieldRenderer({
     );
   }
 
+  if (field.type === 'image') {
+    return (
+      <div>
+        {labelEl}
+        <ImageField value={String(value ?? '')} onChange={onChange} />
+        {hintEl}
+      </div>
+    );
+  }
+
   if (field.type === 'array') {
     const items = Array.isArray(value) ? value as string[] : [];
     return (
@@ -421,4 +433,78 @@ function accentGradient(a: Accent): string {
     default:
       return 'from-teal-400 to-teal-600';
   }
+}
+
+function ImageField({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = async (file?: File) => {
+    if (!file || uploading) return;
+    setUploading(true);
+    setErr(null);
+    const url = await uploadImage(file, 'founders');
+    setUploading(false);
+    if (!url) {
+      setErr('Upload failed. Try a smaller image.');
+      return;
+    }
+    onChange(url);
+  };
+
+  return (
+    <div className="space-y-3">
+      {value && (
+        <div className="relative inline-block">
+          <img
+            src={value}
+            alt="Preview"
+            className="h-24 w-24 rounded-2xl object-cover ring-2 ring-navy-100"
+          />
+          <button
+            type="button"
+            onClick={() => onChange('')}
+            className="absolute -right-2 -top-2 grid h-6 w-6 place-items-center rounded-full bg-hotpink-500 text-white shadow-soft"
+            aria-label="Remove image"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
+      <div className="flex flex-wrap items-center gap-2">
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*"
+          onChange={(e) => handleFile(e.target.files?.[0])}
+          className="hidden"
+        />
+        <button
+          type="button"
+          onClick={() => fileRef.current?.click()}
+          disabled={uploading}
+          className="inline-flex items-center gap-2 rounded-xl border-2 border-navy-100 bg-white px-3 py-2 text-sm font-bold text-navy-700 transition-colors hover:border-teal-300 disabled:opacity-50"
+        >
+          <Upload className="h-4 w-4" />
+          {uploading ? 'Uploading…' : 'Upload image'}
+        </button>
+        <span className="text-xs text-navy-400">or paste a URL below</span>
+      </div>
+      <input
+        type="url"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder="https://…"
+        className="w-full rounded-xl border-2 border-navy-100 bg-white px-3.5 py-2.5 text-sm text-navy-800 outline-none focus:border-teal-300"
+      />
+      {err && <p className="text-xs font-semibold text-hotpink-600">{err}</p>}
+    </div>
+  );
 }

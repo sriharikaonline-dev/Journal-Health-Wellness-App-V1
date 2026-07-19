@@ -129,6 +129,7 @@ export const fallbackSiteSettings: SiteSettings = {
     highlight: 'You Got This.',
     paragraph:
       "Medical Youth Journal (MY Journal, for short) is a nonprofit built by young people who believe wellness should feel welcoming — not intimidating. We write about the stuff that actually matters at your age: mood, sleep, food, focus, friendships, and the big question of what to do with your life.",
+    heroImage: null,
     whatWeDoEyebrow: 'What we do',
     whatWeDoTitle: 'A wellness companion, not another thing to stress about',
     whatWeDoSubtitle: 'Four ways we show up for you — all free, all friendly.',

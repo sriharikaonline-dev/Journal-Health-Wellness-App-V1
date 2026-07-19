@@ -54,6 +54,15 @@ export function AboutPage() {
                 "Medical Youth Journal (MY Journal, for short) is a nonprofit built by young people who believe wellness should feel welcoming — not intimidating. We write about the stuff that actually matters at your age: mood, sleep, food, focus, friendships, and the big question of what to do with your life."}
             </p>
           </div>
+          {a?.heroImage && (
+            <div className="mx-auto mt-10 max-w-4xl overflow-hidden rounded-3xl shadow-soft">
+              <img
+                src={a.heroImage}
+                alt="Our team"
+                className="h-full w-full object-cover"
+              />
+            </div>
+          )}
         </div>
       </section>
 
