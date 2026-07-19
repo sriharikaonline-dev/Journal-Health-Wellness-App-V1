@@ -33,6 +33,7 @@ const ICONS: Record<string, LucideIcon> = {
   categories: Tag,
   body_systems: PersonStanding,
   medical_professions: Compass,
+  founders: Users,
   site_settings: Home,
 };
 
@@ -42,6 +43,7 @@ const ACCENT_CLASS: Record<string, { bg: string; text: string }> = {
   categories: { bg: 'bg-sunny-100', text: 'text-sunny-600' },
   body_systems: { bg: 'bg-navy-100', text: 'text-navy-700' },
   medical_professions: { bg: 'bg-hotpink-100', text: 'text-hotpink-600' },
+  founders: { bg: 'bg-teal-100', text: 'text-teal-600' },
   site_settings: { bg: 'bg-teal-100', text: 'text-teal-600' },
 };
 
@@ -107,7 +109,7 @@ export function AdminDashboardPage() {
       <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
         {CONTENT_TYPES.map((c) => {
           const Icon = ICONS[c.type] ?? BookOpen;
-          const ac = ACCENT_CLASS[c.type];
+          const ac = ACCENT_CLASS[c.type] ?? { bg: 'bg-navy-100', text: 'text-navy-700' };
           return (
             <a
               key={c.type}
