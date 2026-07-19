@@ -168,7 +168,7 @@ function ProfessionModal({
     >
       <div className="absolute inset-0 bg-navy-950/60 backdrop-blur-sm animate-fade-up" />
       <div
-        className="card relative z-10 max-h-[88vh] w-full max-w-lg animate-pop-in overflow-y-auto"
+        className="card relative z-10 max-h-[88dvh] w-full max-w-lg animate-pop-in overflow-y-auto px-safe pb-safe"
         onClick={(e) => e.stopPropagation()}
       >
         <div className={`relative h-32 bg-gradient-to-br ${a.gradient}`}>
@@ -177,7 +177,7 @@ function ProfessionModal({
           <button
             type="button"
             onClick={onClose}
-            className="absolute right-4 top-4 grid h-9 w-9 place-items-center rounded-full bg-white/90 text-navy-800 shadow-soft transition-transform hover:scale-110"
+            className="absolute right-4 top-4 grid h-11 w-11 place-items-center rounded-full bg-white/90 text-navy-800 shadow-soft transition-transform hover:scale-110"
             aria-label="Close"
           >
             <X className="h-5 w-5" />

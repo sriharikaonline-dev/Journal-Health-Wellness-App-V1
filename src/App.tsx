@@ -47,7 +47,7 @@ function App() {
   if (isAdminRoute || isSignInRoute) {
     if (loading) {
       return (
-        <div className="grid min-h-screen place-items-center bg-navy-50">
+        <div className="grid min-h-dvh place-items-center bg-navy-50">
           <div className="relative h-14 w-14">
             <span className="absolute inset-0 animate-ping rounded-full bg-teal-300 opacity-60" />
             <span className="absolute inset-2 rounded-full bg-gradient-to-br from-teal-500 via-hotpink-500 to-sunny-400" />
@@ -62,7 +62,7 @@ function App() {
       return null;
     }
     return (
-      <div className="min-h-screen bg-navy-50">
+      <div className="min-h-dvh bg-navy-50">
         {route.name === 'admin' && <AdminDashboardPage />}
         {route.name === 'admin-blogs' && <AdminBlogsPage />}
         {route.name === 'admin-blog-edit' && (
@@ -80,7 +80,7 @@ function App() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-navy-50">
+    <div className="flex min-h-dvh flex-col bg-navy-50">
       <NavBar route={route} />
       <main className="flex-1">
         {route.name === 'home' && <HomePage />}

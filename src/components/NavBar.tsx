@@ -83,7 +83,7 @@ export function NavBar({ route }: { route: Route }) {
         <button
           type="button"
           onClick={() => setOpen((o) => !o)}
-          className="grid h-10 w-10 place-items-center rounded-xl bg-white text-navy-800 shadow-soft md:hidden"
+          className="grid h-11 w-11 place-items-center rounded-xl bg-white text-navy-800 shadow-soft md:hidden"
           aria-label={open ? 'Close menu' : 'Open menu'}
           aria-expanded={open}
         >
