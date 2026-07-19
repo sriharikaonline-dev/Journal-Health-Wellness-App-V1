@@ -395,7 +395,7 @@ function newContent(type: ContentType): Record<string, unknown> {
 }
 
 function sanitizeInput(
-  _type: ContentType,
+  type: ContentType,
   input: Record<string, unknown>,
 ): Record<string, unknown> {
   const out: Record<string, unknown> = { ...input };
