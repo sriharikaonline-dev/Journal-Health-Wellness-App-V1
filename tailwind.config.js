@@ -100,6 +100,11 @@ export default {
           '0%': { backgroundPosition: '-200% 0' },
           '100%': { backgroundPosition: '200% 0' },
         },
+        shake: {
+          '0%, 100%': { transform: 'translateX(0)' },
+          '20%, 60%': { transform: 'translateX(-8px)' },
+          '40%, 80%': { transform: 'translateX(8px)' },
+        },
       },
       animation: {
         'float-slow': 'float-slow 7s ease-in-out infinite',
@@ -108,6 +113,7 @@ export default {
         'fade-up': 'fade-up 0.6s ease-out both',
         wiggle: 'wiggle 0.6s ease-in-out infinite',
         shimmer: 'shimmer 2.5s linear infinite',
+        shake: 'shake 0.45s ease-in-out both',
       },
     },
   },
