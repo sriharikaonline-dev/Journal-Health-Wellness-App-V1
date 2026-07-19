@@ -1,0 +1,30 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1f2f54"/>
+      <stop offset="55%" stop-color="#2d4180"/>
+      <stop offset="100%" stop-color="#3a52a8"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#14b8a6"/>
+      <stop offset="50%" stop-color="#ec4899"/>
+      <stop offset="100%" stop-color="#fbbf24"/>
+    </linearGradient>
+    <filter id="soft" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="40"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <circle cx="160" cy="120" r="140" fill="#14b8a6" opacity="0.35" filter="url(#soft)"/>
+  <circle cx="1060" cy="520" r="170" fill="#ec4899" opacity="0.30" filter="url(#soft)"/>
+  <circle cx="980" cy="90" r="90" fill="#fbbf24" opacity="0.25" filter="url(#soft)"/>
+  <g transform="translate(96,232)">
+    <rect width="96" height="96" rx="26" fill="url(#accent)"/>
+    <path d="M48 30c-6-10-22-12-22 4 0 12 14 20 22 26 8-6 22-14 22-26 0-16-16-14-22-4z" fill="#fff"/>
+  </g>
+  <text x="220" y="300" font-family="Baloo 2, Nunito, system-ui, sans-serif" font-size="64" font-weight="800" fill="#ffffff">MY Journal</text>
+  <text x="220" y="356" font-family="Nunito, system-ui, sans-serif" font-size="26" font-weight="700" fill="#7dd3fc" letter-spacing="3">YOU GOT THIS</text>
+  <text x="96" y="470" font-family="Nunito, system-ui, sans-serif" font-size="30" font-weight="600" fill="#c7d2fe">An uplifting wellness companion for young minds.</text>
+  <text x="96" y="516" font-family="Nunito, system-ui, sans-serif" font-size="30" font-weight="600" fill="#c7d2fe">Check in, learn, and grow with MY Journal.</text>
+  <rect x="0" y="0" width="1200" height="630" fill="none" stroke="url(#accent)" stroke-width="4" opacity="0.4"/>
+</svg>

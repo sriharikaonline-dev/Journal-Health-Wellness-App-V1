@@ -10,6 +10,7 @@ import { BlogDetailPage } from './pages/BlogDetailPage';
 import { BodyPage } from './pages/BodyPage';
 import { CareersPage } from './pages/CareersPage';
 import { AboutPage } from './pages/AboutPage';
+import { PrivacyPage } from './pages/PrivacyPage';
 import { FoundersPage } from './pages/FoundersPage';
 import { NotFoundPage } from './pages/NotFoundPage';
 import { AdminSignInPage } from './pages/AdminSignInPage';
@@ -93,6 +94,7 @@ function App() {
         {route.name === 'body' && <BodyPage />}
         {route.name === 'careers' && <CareersPage />}
         {route.name === 'about' && <AboutPage />}
+        {route.name === 'privacy' && <PrivacyPage />}
         {route.name === 'founders' && <FoundersPage />}
         {route.name === 'not-found' && <NotFoundPage />}
       </main>

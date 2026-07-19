@@ -9,6 +9,7 @@ export type Route =
   | { name: 'body' }
   | { name: 'careers' }
   | { name: 'about' }
+  | { name: 'privacy' }
   | { name: 'founders' }
   | { name: 'admin' }
   | { name: 'admin-signin' }
@@ -44,6 +45,7 @@ function parseHash(hash: string): Route {
   if (segments[0] === 'body') return { name: 'body' };
   if (segments[0] === 'careers') return { name: 'careers' };
   if (segments[0] === 'about') return { name: 'about' };
+  if (segments[0] === 'privacy') return { name: 'privacy' };
   if (segments[0] === 'founders') return { name: 'founders' };
   if (segments[0] === 'admin') {
     if (segments[1] === 'signin') return { name: 'admin-signin' };
@@ -83,6 +85,8 @@ export function routeToHash(route: Route): string {
       return '#/careers';
     case 'about':
       return '#/about';
+    case 'privacy':
+      return '#/privacy';
     case 'founders':
       return '#/founders';
     case 'admin':

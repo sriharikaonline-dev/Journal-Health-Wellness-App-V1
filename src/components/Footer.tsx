@@ -20,6 +20,7 @@ const cols: { heading: string; links: { label: string; route: Route }[] }[] = [
       { label: 'Your Body', route: { name: 'body' } },
       { label: 'Find Your Path', route: { name: 'careers' } },
       { label: 'About Us', route: { name: 'about' } },
+      { label: 'Privacy Policy', route: { name: 'privacy' } },
       { label: 'Team Sign-In', route: { name: 'admin-signin' } },
     ],
   },

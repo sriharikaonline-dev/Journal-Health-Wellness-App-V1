@@ -156,6 +156,21 @@ export const fallbackSiteSettings: SiteSettings = {
     email: 'hello@myjournal.org',
     instagram: 'https://instagram.com',
   },
+  privacy: {
+    intro:
+      'MY Journal is built by the Medical Youth Journal team. We take your privacy seriously and keep things simple: we only collect what we need to make the site helpful, and we never sell your information.',
+    whatWeCollect:
+      'When you take a wellness check-in, we store the category you selected (for example, "calm" or "focus") so we can suggest relevant blogs — not your individual answers. If you send a message through the Questions chat, we store that message along with the name you chose to share. Team members who sign in have an account tied to their email.',
+    howWeUseIt:
+      'We use check-in categories to recommend reads, and we use messages you send to reply to you. That is it. We do not run ads, build a profile of you, or share your information with third parties for marketing.',
+    storage:
+      'Your data lives in a secure, access-controlled database. Only members of the MY Journal team with an admin account can read messages sent through the Questions chat. Anonymous visitors are identified by a random session ID stored only in your browser — no email required.',
+    yourRights:
+      'You can ask us to show you what we have, correct it, or delete it at any time. Because anonymous check-ins are not tied to your identity, the easiest way to stay private is to skip the name field in the chat, or use a nickname.',
+    contactNote:
+      'Questions about your privacy? Send a message through the Questions chat on any page, or email the address listed in the footer. We will get back to you.',
+    lastUpdated: 'July 2026',
+  },
 };
 
 export const fallback = {

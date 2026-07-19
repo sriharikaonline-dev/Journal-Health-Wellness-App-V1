@@ -148,8 +148,19 @@ export interface SiteContactCopy {
   instagram: string;
 }
 
+export interface SitePrivacyCopy {
+  intro: string;
+  whatWeCollect: string;
+  howWeUseIt: string;
+  storage: string;
+  yourRights: string;
+  contactNote: string;
+  lastUpdated: string;
+}
+
 export interface SiteSettings {
   home: SiteHomeCopy;
   about: SiteAboutCopy;
   contact: SiteContactCopy;
+  privacy: SitePrivacyCopy;
 }

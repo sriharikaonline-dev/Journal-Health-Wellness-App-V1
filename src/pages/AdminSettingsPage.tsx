@@ -16,6 +16,7 @@ import {
   Upload,
   Mail,
   Instagram,
+  Shield,
 } from 'lucide-react';
 import type { SiteSettings, FeatureBlurb } from '../lib/types';
 import {
@@ -36,7 +37,7 @@ import {
   hashPasscode,
 } from '../lib/passcode';
 
-type Tab = 'home' | 'about' | 'contact';
+type Tab = 'home' | 'about' | 'contact' | 'privacy';
 
 export function AdminSettingsPage() {
   const { signOut, user } = useAuth();
@@ -86,6 +87,10 @@ export function AdminSettingsPage() {
   };
   const updateContact = (patch: Partial<SiteSettings['contact']>) => {
     setSettings((s) => (s ? { ...s, contact: { ...s.contact, ...patch } } : s));
+    setSaved(false);
+  };
+  const updatePrivacy = (patch: Partial<SiteSettings['privacy']>) => {
+    setSettings((s) => (s ? { ...s, privacy: { ...s.privacy, ...patch } } : s));
     setSaved(false);
   };
 
@@ -243,6 +248,15 @@ export function AdminSettingsPage() {
           <Mail className="h-4 w-4" />
           Contact & Social
         </button>
+        <button
+          onClick={() => setTab('privacy')}
+          className={`flex flex-1 items-center justify-center gap-1.5 rounded-full px-5 py-2 text-sm font-bold transition-colors sm:flex-none ${
+            tab === 'privacy' ? 'bg-white text-navy-900 shadow-soft' : 'text-navy-500'
+          }`}
+        >
+          <Shield className="h-4 w-4" />
+          Privacy Policy
+        </button>
       </div>
 
       {isOwner && (
@@ -269,8 +283,10 @@ export function AdminSettingsPage() {
           <HomeEditor settings={settings} onChange={updateHome} />
         ) : tab === 'about' ? (
           <AboutEditor settings={settings} onChange={updateAbout} />
-        ) : (
+        ) : tab === 'contact' ? (
           <ContactEditor settings={settings} onChange={updateContact} />
+        ) : (
+          <PrivacyEditor settings={settings} onChange={updatePrivacy} />
         )}
       </div>
     </div>
@@ -358,6 +374,65 @@ function AboutEditor({
       <SectionLabel>Call-to-action banner</SectionLabel>
       <TextField label="Heading" value={a.ctaTitle} onChange={(v) => onChange({ ctaTitle: v })} />
       <TextField label="Subtitle" value={a.ctaSubtitle} onChange={(v) => onChange({ ctaSubtitle: v })} />
+    </>
+  );
+}
+
+function PrivacyEditor({
+  settings,
+  onChange,
+}: {
+  settings: SiteSettings;
+  onChange: (patch: Partial<SiteSettings['privacy']>) => void;
+}) {
+  const p = settings.privacy;
+  return (
+    <>
+      <SectionLabel>Overview</SectionLabel>
+      <TextAreaField
+        label="Intro paragraph"
+        value={p.intro}
+        onChange={(v) => onChange({ intro: v })}
+        hint="Shown at the top of the Privacy Policy page. Keep it warm and clear."
+      />
+      <TextField
+        label="Last updated date"
+        value={p.lastUpdated}
+        onChange={(v) => onChange({ lastUpdated: v })}
+        hint="Shown beneath the intro, e.g. 'July 2026'."
+      />
+
+      <SectionLabel>Policy sections</SectionLabel>
+      <TextAreaField
+        label="What we collect"
+        value={p.whatWeCollect}
+        onChange={(v) => onChange({ whatWeCollect: v })}
+        hint="What information the site stores about visitors."
+      />
+      <TextAreaField
+        label="How we use it"
+        value={p.howWeUseIt}
+        onChange={(v) => onChange({ howWeUseIt: v })}
+        hint="What the team does with that information."
+      />
+      <TextAreaField
+        label="Where it lives (storage)"
+        value={p.storage}
+        onChange={(v) => onChange({ storage: v })}
+        hint="How and where data is stored, and who can access it."
+      />
+      <TextAreaField
+        label="Your rights"
+        value={p.yourRights}
+        onChange={(v) => onChange({ yourRights: v })}
+        hint="What visitors can ask the team to do with their data."
+      />
+      <TextAreaField
+        label="Contact note"
+        value={p.contactNote}
+        onChange={(v) => onChange({ contactNote: v })}
+        hint="How visitors can reach out with privacy questions."
+      />
     </>
   );
 }

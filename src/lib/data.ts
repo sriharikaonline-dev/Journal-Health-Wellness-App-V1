@@ -211,6 +211,7 @@ function mergeSettings(base: SiteSettings, patch: Partial<SiteSettings>): SiteSe
     home: { ...base.home, ...(patch.home ?? {}) },
     about: { ...base.about, ...(patch.about ?? {}) },
     contact: { ...base.contact, ...(patch.contact ?? {}) },
+    privacy: { ...base.privacy, ...(patch.privacy ?? {}) },
   };
 }
 
